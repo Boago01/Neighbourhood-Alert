@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Campaign - Neighbourhood Alert{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h2 class="h5 mb-0">Delete Campaign</h2>
+                </div>
+                <div class="card-body">
+                    <p>Are you sure you want to delete <strong>{{ campaign.title }}</strong>?</p>
+                    <p class="text-danger">This permanently deletes the campaign, its items, and associated donation requests.</p>
+                    <form method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Delete Campaign</button>
+                        <a href="{% url 'campaign_detail' campaign.id %}" class="btn btn-outline-secondary">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

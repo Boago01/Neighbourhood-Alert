@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Remove Volunteer - Neighbourhood Alert{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'police_my_cases' %}">My Cases</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'police_monitor_case' assignment.incident.id %}">Monitor Activity</a></li>
+            <li class="breadcrumb-item active">Remove Volunteer</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-warning">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-circle me-2"></i>Remove Volunteer - Confirmation</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info" role="alert">
+                        <strong>Are you sure you want to remove this volunteer from the case?</strong>
+                        <br>This action cannot be undone. The volunteer's assignment will be cancelled.
+                    </div>
+
+                    <h6>Volunteer Information:</h6>
+                    <div class="card bg-light mb-3">
+                        <div class="card-body">
+                            <p class="mb-2">
+                                <strong>Name:</strong><br>
+                                {{ assignment.volunteer.get_full_name }}
+                            </p>
+                            <p class="mb-2">
+                                <strong>Email:</strong><br>
+                                {{ assignment.volunteer.email }}
+                            </p>
+                            <p class="mb-2">
+                                <strong>Current Status:</strong><br>
+                                <span class="badge bg-{{ assignment.get_status_color }}">{{ assignment.get_status_display }}</span>
+                            </p>
+                            <p class="mb-0">
+                                <strong>Assigned Date:</strong><br>
+                                {{ assignment.assigned_at|date:"M d, Y H:i" }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <h6>Case Information:</h6>
+                    <div class="card bg-light mb-3">
+                        <div class="card-body">
+                            <p class="mb-2">
+                                <strong>Case Title:</strong><br>
+                                {{ assignment.incident.title }}
+                            </p>
+                            <p class="mb-0">
+                                <strong>Priority:</strong><br>
+                                {{ assignment.get_priority_display }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <form method="POST" class="mt-4">
+                        {% csrf_token %}
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-warning flex-grow-1">
+                                <i class="fas fa-check-circle me-2"></i>Yes, Remove Volunteer
+                            </button>
+                            <a href="{% url 'police_monitor_case' assignment.incident.id %}" class="btn btn-outline-secondary flex-grow-1">
+                                <i class="fas fa-times me-2"></i>No, Go Back
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

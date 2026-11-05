@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block title %}Report Incident - Neighbourhood Alert{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="fas fa-exclamation-circle me-2" style="color: var(--secondary-color);"></i>Report Incident</h2>
+        <p class="text-muted">Report a crime or suspicious activity in your area</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-edit me-2"></i>Incident Details
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="id_title" class="form-label">Title *</label>
+                        {{ form.title }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_description" class="form-label">Description *</label>
+                        {{ form.description }}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_category" class="form-label">Category *</label>
+                            {{ form.category }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_severity" class="form-label">Severity *</label>
+                            {{ form.severity }}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Location *</label>
+                        <p class="text-muted small">Click on the map to select the incident location</p>
+                        <div id="map" style="height: 400px; border-radius: 8px;"></div>
+                        {{ form.latitude }}
+                        {{ form.longitude }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_location_description" class="form-label">Location Description</label>
+                        {{ form.location_description }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_image" class="form-label">Image (Optional)</label>
+                        {{ form.image }}
+                        <div class="form-text">Upload a photo related to the incident</div>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        {{ form.is_anonymous }}
+                        <label class="form-check-label" for="id_is_anonymous">
+                            Report anonymously
+                        </label>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-danger btn-lg">
+                            <i class="fas fa-paper-plane me-2"></i>Submit Report
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-info-circle me-2"></i>Reporting Guidelines
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Provide accurate location information
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Describe what happened clearly
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Upload photos if available
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Select appropriate severity level
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                        False reports are punishable by law
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-phone me-2"></i>Emergency Contacts
+            </div>
+            <div class="card-body">
+                <p><strong>Police:</strong> 10111</p>
+                <p><strong>Ambulance:</strong> 10177</p>
+                <p><strong>Fire:</strong> 10177</p>
+                <p><strong>Kimberley SAPS:</strong> 053 839 3000</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+window.initReportMap = function() {
+    const incidentMap = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: -28.7282, lng: 24.7499 },
+        zoom: 13,
+        mapTypeId: 'roadmap'
+    });
+    let marker = null;
+
+    incidentMap.addListener('click', function(event) {
+        const location = event.latLng;
+        document.getElementById('id_latitude').value = location.lat().toFixed(8);
+        document.getElementById('id_longitude').value = location.lng().toFixed(8);
+        if (marker) {
+            marker.setPosition(location);
+        } else {
+            marker = new google.maps.Marker({
+                position: location,
+                map: incidentMap,
+                title: 'Incident Location'
+            });
+        }
+    });
+
+    const locations = [
+        { lat: -28.7282, lng: 24.7499, name: 'Kimberley CBD' },
+        { lat: -28.7400, lng: 24.7600, name: 'Galeshewe' },
+        { lat: -28.7100, lng: 24.7300, name: 'Roodepan' },
+        { lat: -28.7350, lng: 24.7450, name: 'Civic Centre' },
+        { lat: -28.7200, lng: 24.7550, name: 'Kimberley Hospital' }
+    ];
+    locations.forEach(function(location) {
+        new google.maps.Marker({
+            position: { lat: location.lat, lng: location.lng },
+            map: incidentMap,
+            title: location.name,
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 5,
+                fillColor: '#1E3A8A',
+                fillOpacity: 0.5,
+                strokeColor: '#1E3A8A',
+                strokeWeight: 1
+            }
+        });
+    });
+};
+</script>
+{% include "includes/google_maps_loader.html" with callback="initReportMap" %}
+{% endblock %}

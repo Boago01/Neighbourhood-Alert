@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Volunteer Application{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Apply to Become a Volunteer</h2>
+
+    <div class="card shadow">
+        <div class="card-body">
+
+            <form method="POST">
+                {% csrf_token %}
+
+                {{ form.non_field_errors }}
+
+                <div class="mb-3">
+                    {{ form.motivation.label_tag }}
+                    {{ form.motivation }}
+                    {{ form.motivation.errors }}
+                </div>
+
+                <div class="mb-3">
+                    {{ form.experience.label_tag }}
+                    {{ form.experience }}
+                    {{ form.experience.errors }}
+                </div>
+
+                <div class="mb-3">
+                    {{ form.skills.label_tag }}
+                    {{ form.skills }}
+                    {{ form.skills.errors }}
+                </div>
+
+                <div class="mb-3">
+                    {{ form.availability.label_tag }}
+                    {{ form.availability }}
+                    {{ form.availability.errors }}
+                </div>
+
+                <button class="btn btn-primary">Submit Application</button>
+                <a href="{% url 'volunteer_list' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

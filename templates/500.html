@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Something went wrong - Neighbourhood Alert{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header">
+                <h1 class="h4 mb-0">Something went wrong</h1>
+            </div>
+            <div class="card-body">
+                <p>We encountered an unexpected error. Would you like to report this problem to help us improve Neighbourhood Alert?</p>
+                <div class="d-flex gap-2">
+                    {% if can_report_error %}
+                    <button
+                        type="button"
+                        class="btn btn-primary"
+                        data-error-report-start
+                        data-server-error-report
+                        data-report-url="{% url 'problem_report_create' %}">
+                        Report Problem
+                    </button>
+                    {% endif %}
+                    <a class="btn btn-outline-secondary" href="{% url 'home' %}">Dismiss</a>
+                </div>
+                <div
+                    data-server-error-page
+                    data-page-path="{{ safe_page_path }}"
+                    data-error-summary="An unexpected server error occurred.">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

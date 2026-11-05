@@ -1,0 +1,416 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Neighbourhood Alert{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="fas fa-tachometer-alt me-2" style="color: var(--primary-color);"></i>Dashboard</h2>
+        <p class="text-muted">Welcome back, {{ user.get_full_name|default:user.username }}!</p>
+    </div>
+</div>
+
+<!-- Role-specific Dashboard Content -->
+{% if user.is_admin_user %}
+<!-- Admin Dashboard -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="dashboard-widget stat-card text-center">
+            <i class="fas fa-users widget-icon mb-3"></i>
+            <div class="widget-value">{{ total_users }}</div>
+            <div class="widget-label">Total Users</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="dashboard-widget stat-card text-center">
+            <i class="fas fa-exclamation-triangle widget-icon mb-3" style="color: var(--secondary-color);"></i>
+            <div class="widget-value" style="color: var(--secondary-color);">{{ total_incidents }}</div>
+            <div class="widget-label">Total Incidents</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="dashboard-widget stat-card text-center">
+            <i class="fas fa-user-clock widget-icon mb-3" style="color: var(--accent-color);"></i>
+            <div class="widget-value" style="color: var(--accent-color);">{{ pending_volunteers }}</div>
+            <div class="widget-label">Pending Volunteers</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="dashboard-widget stat-card text-center">
+            <i class="fas fa-check-circle widget-icon mb-3" style="color: var(--success-color);"></i>
+            <div class="widget-value" style="color: var(--success-color);">{{ incidents_by_status.resolved }}</div>
+            <div class="widget-label">Resolved Cases</div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-chart-pie me-2"></i>Incident Statistics</span>
+                <a href="{% url 'statistics' %}" class="btn btn-sm btn-light">View Details</a>
+            </div>
+            <div class="card-body">
+                <canvas id="incidentChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-user-clock me-2"></i>Pending Approvals
+            </div>
+            <div class="card-body">
+                {% if pending_approvals %}
+                <ul class="list-group list-group-flush">
+                    {% for volunteer in pending_approvals %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ volunteer.user.get_full_name|default:volunteer.user.username }}
+                        <form method="post" action="{% url 'approve_volunteer' volunteer.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                        </form>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted mb-0">No pending approvals</p>
+                {% endif %}
+                <hr>
+                <p class="mb-2"><strong>Pending police applications:</strong> {{ pending_police }}</p>
+                <a href="{% url 'pending_police_applications' %}" class="btn btn-sm btn-outline-primary">
+                    Review police applications
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% elif user.is_police %}
+<!-- Police Dashboard -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="dashboard-widget stat-card text-center">
+            <i class="fas fa-folder-open widget-icon mb-3" style="color: var(--primary-color);"></i>
+            <div class="widget-value">{{ active_cases }}</div>
+            <div class="widget-label">Active Cases</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dashboard-widget stat-card text-center">
+            <i class="fas fa-exclamation-circle widget-icon mb-3" style="color: var(--secondary-color);"></i>
+            <div class="widget-value" style="color: var(--secondary-color);">{{ high_priority_incidents|length }}</div>
+            <div class="widget-label">High Priority</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dashboard-widget stat-card text-center">
+            <i class="fas fa-check-double widget-icon mb-3" style="color: var(--success-color);"></i>
+            <div class="widget-value" style="color: var(--success-color);">{{ resolved_by_me }}</div>
+            <div class="widget-label">Resolved by You</div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-exclamation-triangle me-2"></i>High Priority Incidents
+            </div>
+            <div class="card-body">
+                {% if high_priority_incidents %}
+                <div class="list-group">
+                    {% for incident in high_priority_incidents %}
+                    <a href="{% url 'incident_detail' incident.id %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ incident.title }}</h6>
+                            <span class="badge bg-danger">{{ incident.get_severity_display }}</span>
+                        </div>
+                        <small class="text-muted">{{ incident.location_description|default:"No location" }}</small>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No high priority incidents</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-tasks me-2"></i>Your Assigned Cases
+            </div>
+            <div class="card-body">
+                {% if assigned_incidents %}
+                <div class="list-group">
+                    {% for incident in assigned_incidents %}
+                    <a href="{% url 'incident_detail' incident.id %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ incident.title }}</h6>
+                            <span class="badge bg-{{ incident.get_status_color }}">{{ incident.get_status_display }}</span>
+                        </div>
+                        <small class="text-muted">{{ incident.created_at|timesince }} ago</small>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No assigned cases</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% elif user.is_volunteer %}
+<!-- Volunteer Dashboard -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="dashboard-widget stat-card text-center">
+            <i class="fas fa-hands-helping widget-icon mb-3" style="color: var(--accent-color);"></i>
+            <div class="widget-value" style="color: var(--accent-color);">{{ total_responses }}</div>
+            <div class="widget-label">Total Responses</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dashboard-widget stat-card text-center">
+            <i class="fas fa-check-circle widget-icon mb-3" style="color: var(--success-color);"></i>
+            <div class="widget-value" style="color: var(--success-color);">{{ completed_responses }}</div>
+            <div class="widget-label">Completed</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dashboard-widget stat-card text-center">
+            <i class="fas fa-star widget-icon mb-3" style="color: #FBBF24;"></i>
+            <div class="widget-value" style="color: #FBBF24;">{{ volunteer.rating|default:"5.0" }}</div>
+            <div class="widget-label">Your Rating</div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-list me-2"></i>Available Incidents
+            </div>
+            <div class="card-body">
+                {% if nearby_incidents %}
+                <div class="list-group">
+                    {% for incident in nearby_incidents %}
+                    <a href="{% url 'incident_detail' incident.id %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ incident.title }}</h6>
+                            <span class="badge bg-{{ incident.get_severity_color }}">{{ incident.get_severity_display }}</span>
+                        </div>
+                        <small class="text-muted">{{ incident.location_description|default:"No location" }}</small>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No available incidents</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-history me-2"></i>Recent Responses
+            </div>
+            <div class="card-body">
+                {% if recent_responses %}
+                <div class="list-group">
+                    {% for response in recent_responses %}
+                    <a href="{% url 'incident_detail' response.incident.id %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ response.incident.title }}</h6>
+                            <span class="badge bg-info">{{ response.get_status_display }}</span>
+                        </div>
+                        <small class="text-muted">{{ response.responded_at|timesince }} ago</small>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No recent responses</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<!-- Resident Dashboard -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="dashboard-widget stat-card text-center">
+            <i class="fas fa-file-alt widget-icon mb-3" style="color: var(--primary-color);"></i>
+            <div class="widget-value" style="color: var(--primary-color);">{{ my_reports_count }}</div>
+            <div class="widget-label">My Reports</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dashboard-widget stat-card text-center">
+            <i class="fas fa-check-circle widget-icon mb-3" style="color: var(--success-color);"></i>
+            <div class="widget-value" style="color: var(--success-color);">
+                {{ my_incidents|length }}
+            </div>
+            <div class="widget-label">Recent Reports</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dashboard-widget stat-card text-center">
+          <i class="fas fa-hand-holding-heart widget-icon mb-3" style="color: var(--accent-color);"></i>
+            <div class="widget-value" style="color: var(--accent-color);">
+                <a href="{% url 'donation_list' %}" class="btn btn-warning btn-sm">Donate</a>
+            </div>
+            <div class="widget-label">Support Volunteers</div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-file-alt me-2"></i>My Recent Reports
+            </div>
+            <div class="card-body">
+                {% if my_incidents %}
+                <div class="list-group">
+                    {% for incident in my_incidents %}
+                    <a href="{% url 'incident_detail' incident.id %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ incident.title }}</h6>
+                            <span class="badge bg-{{ incident.get_status_color }}">{{ incident.get_status_display }}</span>
+                        </div>
+                        <small class="text-muted">{{ incident.created_at|timesince }} ago</small>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No reports yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-bell me-2"></i>Active Alerts
+            </div>
+            <div class="card-body">
+                {% if active_alerts %}
+                <div class="list-group">
+                    {% for alert in active_alerts %}
+                    <a href="{% url 'alert_detail' alert.id %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ alert.title }}</h6>
+                            <span class="badge bg-{{ alert.get_priority_color }}">{{ alert.get_priority_display }}</span>
+                        </div>
+                        <small class="text-muted">{{ alert.created_at|timesince }} ago</small>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No active alerts</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Common Section - Recent Incidents -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-list me-2"></i>Recent Incidents</span>
+                <a href="{% url 'incident_feed' %}" class="btn btn-sm btn-light">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_incidents %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th>Severity</th>
+                                <th>Status</th>
+                                <th>Location</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for incident in recent_incidents %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'incident_detail' incident.id %}">{{ incident.title }}</a>
+                                </td>
+                                <td>{{ incident.get_category_display }}</td>
+                                <td>
+                                    <span class="badge bg-{{ incident.get_severity_color }}">
+                                        {{ incident.get_severity_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ incident.get_status_color }}">
+                                        {{ incident.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ incident.location_description|default:"-"|truncatechars:30 }}</td>
+                                <td>{{ incident.created_at|date:"M d, Y" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No recent incidents</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if user.is_admin_user %}
+<script>
+    // Incident Statistics Chart
+    var ctx = document.getElementById('incidentChart').getContext('2d');
+    var incidentChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Active', 'Under Investigation', 'Resolved', 'Closed'],
+            datasets: [{
+                data: [
+                    {{ incidents_by_status.active }},
+                    {{ incidents_by_status.investigating }},
+                    {{ incidents_by_status.resolved }},
+                    {{ incidents_by_status.closed }}
+                ],
+                backgroundColor: [
+                    '#DC2626',
+                    '#F97316',
+                    '#16A34A',
+                    '#6B7280'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}

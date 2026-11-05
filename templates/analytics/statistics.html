@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+
+{% block title %}Statistics - Neighbourhood Alert{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2><i class="fas fa-chart-bar me-2" style="color: var(--primary-color);"></i>Crime Statistics</h2>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <a href="{% url 'heatmap' %}" class="btn btn-primary">
+            <i class="fas fa-map me-2"></i>View Heatmap
+        </a>
+    </div>
+</div>
+
+<!-- Overview Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="dashboard-widget stat-card text-center">
+            <i class="fas fa-exclamation-triangle widget-icon mb-3" style="color: var(--secondary-color);"></i>
+            <div class="widget-value" style="color: var(--secondary-color);">{{ total_incidents }}</div>
+            <div class="widget-label">Total Incidents</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="dashboard-widget stat-card text-center">
+            <i class="fas fa-calendar-week widget-icon mb-3" style="color: var(--accent-color);"></i>
+            <div class="widget-value" style="color: var(--accent-color);">{{ incidents_last_7_days }}</div>
+            <div class="widget-label">Last 7 Days</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="dashboard-widget stat-card text-center">
+            <i class="fas fa-calendar-alt widget-icon mb-3" style="color: var(--primary-color);"></i>
+            <div class="widget-value" style="color: var(--primary-color);">{{ incidents_last_30_days }}</div>
+            <div class="widget-label">Last 30 Days</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="dashboard-widget stat-card text-center">
+            <i class="fas fa-check-double widget-icon mb-3" style="color: var(--success-color);"></i>
+            <div class="widget-value" style="color: var(--success-color);">{{ incidents_by_status.resolved }}</div>
+            <div class="widget-label">Resolved</div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Incidents by Status -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-tasks me-2"></i>Incidents by Status
+            </div>
+            <div class="card-body">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Incidents by Severity -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-exclamation-circle me-2"></i>Incidents by Severity
+            </div>
+            <div class="card-body">
+                <canvas id="severityChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Incidents by Category -->
+    <div class="col-md-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-tags me-2"></i>Incidents by Category
+            </div>
+            <div class="card-body">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- User Stats -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-users me-2"></i>User Statistics
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Total Users</span>
+                        <span class="badge bg-primary">{{ total_users }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Residents</span>
+                        <span class="badge bg-info">{{ users_by_role.resident }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Volunteers</span>
+                        <span class="badge bg-warning">{{ users_by_role.volunteer }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Police</span>
+                        <span class="badge bg-primary">{{ users_by_role.police }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Admins</span>
+                        <span class="badge bg-danger">{{ users_by_role.admin }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Daily Trends -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-chart-line me-2"></i>Daily Incident Trends (Last 7 Days)
+            </div>
+            <div class="card-body">
+                <canvas id="trendsChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Status Chart
+    var statusCtx = document.getElementById('statusChart').getContext('2d');
+    new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Active', 'Under Investigation', 'Resolved', 'Closed'],
+            datasets: [{
+                data: [
+                    {{ incidents_by_status.active }},
+                    {{ incidents_by_status.investigating }},
+                    {{ incidents_by_status.resolved }},
+                    {{ incidents_by_status.closed }}
+                ],
+                backgroundColor: ['#DC2626', '#F97316', '#16A34A', '#6B7280']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+    
+    // Severity Chart
+    var severityCtx = document.getElementById('severityChart').getContext('2d');
+    new Chart(severityCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Low', 'Medium', 'High', 'Critical'],
+            datasets: [{
+                data: [
+                    {{ incidents_by_severity.low }},
+                    {{ incidents_by_severity.medium }},
+                    {{ incidents_by_severity.high }},
+                    {{ incidents_by_severity.critical }}
+                ],
+                backgroundColor: ['#16A34A', '#3B82F6', '#F97316', '#DC2626']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+    
+    // Category Chart
+    var categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    new Chart(categoryCtx, {
+        type: 'bar',
+        data: {
+            labels: [{% for cat in incidents_by_category %}'{{ cat.category|title }}',{% endfor %}],
+            datasets: [{
+                label: 'Incidents',
+                data: [{% for cat in incidents_by_category %}{{ cat.count }},{% endfor %}],
+                backgroundColor: '#1E3A8A'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+    
+    // Trends Chart
+    var trendsCtx = document.getElementById('trendsChart').getContext('2d');
+    new Chart(trendsCtx, {
+        type: 'line',
+        data: {
+            labels: [{% for day in daily_incidents %}'{{ day.date }}',{% endfor %}],
+            datasets: [{
+                label: 'Incidents',
+                data: [{% for day in daily_incidents %}{{ day.count }},{% endfor %}],
+                borderColor: '#1E3A8A',
+                backgroundColor: 'rgba(30, 58, 138, 0.1)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+</script>
+{% endblock %}

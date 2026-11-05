@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ incident.title }} - Neighbourhood Alert{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'incident_feed' %}">Incidents</a></li>
+                <li class="breadcrumb-item active">{{ incident.title }}</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="col-md-4 text-md-end">
+        {% if user.is_admin_user %}
+        <a href="{% url 'delete_incident' incident.id %}" class="btn btn-outline-danger btn-sm">
+            <i class="fas fa-trash me-2"></i>Delete
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <!-- Main Incident Info -->
+    <div class="col-lg-8">
+        <div class="card mb-4 incident-card severity-{{ incident.severity }}">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>{{ incident.title }}</span>
+                <span class="badge bg-{{ incident.get_severity_color }}">
+                    {{ incident.get_severity_display }}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p class="mb-1">
+                            <strong><i class="fas fa-tag me-2"></i>Category:</strong>
+                            {{ incident.get_category_display }}
+                        </p>
+                        <p class="mb-1">
+                            <strong><i class="fas fa-exclamation-circle me-2"></i>Status:</strong>
+                            <span class="badge bg-{{ incident.get_status_color }}">
+                                {{ incident.get_status_display }}
+                            </span>
+                        </p>
+                        <p class="mb-1">
+                            <strong><i class="fas fa-user me-2"></i>Reported by:</strong>
+                            {{ incident.get_display_reporter }}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1">
+                            <strong><i class="fas fa-calendar me-2"></i>Date:</strong>
+                            {{ incident.created_at|date:"F d, Y H:i" }}
+                        </p>
+                        {% if incident.case_number %}
+                        <p class="mb-1">
+                            <strong><i class="fas fa-hashtag me-2"></i>Case Number:</strong>
+                            {{ incident.case_number }}
+                        </p>
+                        {% endif %}
+                        {% if incident.assigned_officer %}
+                        <p class="mb-1">
+                            <strong><i class="fas fa-user-shield me-2"></i>Assigned to:</strong>
+                            {{ incident.assigned_officer.get_full_name|default:incident.assigned_officer.username }}
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h6><i class="fas fa-align-left me-2"></i>Description</h6>
+                <p>{{ incident.description|linebreaks }}</p>
+                
+                {% if incident.image %}
+                <hr>
+                <h6><i class="fas fa-image me-2"></i>Evidence</h6>
+                <img src="{{ incident.image.url }}" alt="Incident Image" class="img-fluid rounded" style="max-height: 400px;">
+                {% endif %}
+                
+                {% if incident.investigation_notes %}
+                <hr>
+                <h6><i class="fas fa-clipboard-list me-2"></i>Investigation Notes</h6>
+                <div class="alert alert-info">
+                    {{ incident.investigation_notes|linebreaks }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Map -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-map-marker-alt me-2"></i>Location
+            </div>
+            <div class="card-body p-0">
+                <div id="incident-map" style="height: 300px;"></div>
+            </div>
+            {% if incident.location_description %}
+            <div class="card-footer">
+                <small class="text-muted">
+                    <i class="fas fa-map-pin me-2"></i>{{ incident.location_description }}
+                </small>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Comments -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-comments me-2"></i>Comments ({{ comments|length }})
+            </div>
+            <div class="card-body">
+                {% if user.is_authenticated %}
+                <form method="post" action="{% url 'add_comment' incident.id %}" class="mb-4">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        {{ comment_form.content }}
+                    </div>
+                    {% if user.is_police or user.is_admin_user %}
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="is_official" name="is_official">
+                        <label class="form-check-label" for="is_official">Mark as official comment</label>
+                    </div>
+                    {% endif %}
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-2"></i>Add Comment
+                    </button>
+                </form>
+                {% endif %}
+                
+                {% for comment in comments %}
+                <div class="mb-3 p-3 rounded {% if comment.is_official %}comment-official{% else %}bg-light{% endif %}">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong>
+                                {% if comment.is_official %}
+                                <i class="fas fa-badge-check me-1" style="color: var(--primary-color);"></i>
+                                {% endif %}
+                                {{ comment.author.get_full_name|default:comment.author.username }}
+                            </strong>
+                            {% if comment.is_official %}
+                            <span class="badge bg-primary ms-2">Official</span>
+                            {% endif %}
+                        </div>
+                        <small class="text-muted">{{ comment.created_at|timesince }} ago</small>
+                    </div>
+                    <p class="mb-0 mt-2">{{ comment.content|linebreaks }}</p>
+                </div>
+                {% empty %}
+                <p class="text-muted mb-0">No comments yet</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Actions -->
+        {% if user.can_manage_incidents %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-cogs me-2"></i>Actions
+            </div>
+            <div class="card-body">
+                {% if incident.status == 'active' %}
+                <form method="post" action="{% url 'assign_incident' incident.id %}" class="mb-2">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-user-shield me-2"></i>Assign to Me
+                    </button>
+                </form>
+                {% endif %}
+                
+                <form method="post" action="{% url 'update_incident_status' incident.id %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Update Status</label>
+                        <select name="status" class="form-select">
+                            {% for value, label in incident.STATUS_CHOICES %}
+                            <option value="{{ value }}" {% if incident.status == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Case Number</label>
+                        <input type="text" name="case_number" class="form-control" 
+                               value="{{ incident.case_number|default:'' }}" 
+                               placeholder="e.g., KIM-2024-001">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Investigation Notes</label>
+                        <textarea name="investigation_notes" class="form-control" rows="3"
+                                  placeholder="Add notes...">{{ incident.investigation_notes|default:'' }}</textarea>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="fas fa-save me-2"></i>Update
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Volunteer Responses -->
+        {% if incident.volunteer_responses.exists %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-users me-2"></i>Volunteer Responses
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for response in incident.volunteer_responses.all %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ response.volunteer.user.get_full_name|default:response.volunteer.user.username }}
+                        <span class="badge bg-info">{{ response.get_status_display }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Share -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-share-alt me-2"></i>Share
+            </div>
+            <div class="card-body">
+                <button class="btn btn-outline-primary w-100 mb-2" onclick="copyLink()">
+                    <i class="fas fa-link me-2"></i>Copy Link
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+window.initIncidentDetailMap = function() {
+    const incidentLocation = {
+        lat: Number('{{ incident.latitude|escapejs }}'),
+        lng: Number('{{ incident.longitude|escapejs }}')
+    };
+    const incidentMap = new google.maps.Map(document.getElementById('incident-map'), {
+        center: incidentLocation,
+        zoom: 15,
+        mapTypeId: 'roadmap'
+    });
+    const title = document.createElement('div');
+    title.textContent = '{{ incident.title|escapejs }}';
+    const infoWindow = new google.maps.InfoWindow({ content: title });
+    const marker = new google.maps.Marker({
+        position: incidentLocation,
+        map: incidentMap,
+        title: title.textContent
+    });
+    infoWindow.open({ map: incidentMap, anchor: marker });
+};
+
+function copyLink() {
+    navigator.clipboard.writeText(window.location.href);
+    alert('Link copied to clipboard!');
+}
+</script>
+{% include "includes/google_maps_loader.html" with callback="initIncidentDetailMap" %}
+{% endblock %}

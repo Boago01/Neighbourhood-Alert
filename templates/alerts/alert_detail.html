@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ alert.title }} - Alert Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <!-- Back Button -->
+    <a href="{% url 'alert_list' %}" class="btn btn-secondary mb-3">
+        <i class="fas fa-arrow-left"></i> Back to Alerts
+    </a>
+
+    <div class="card shadow">
+
+        <div class="card-header bg-danger text-white">
+            <h3 class="mb-0">{{ alert.title }}</h3>
+        </div>
+
+        <div class="card-body">
+
+            <p>
+                <strong>Priority:</strong>
+                <span class="badge bg-{{ alert.get_priority_color }}">
+                    {{ alert.get_priority_display }}
+                </span>
+            </p>
+
+            {% if alert.latitude and alert.longitude %}
+            <p>
+                <strong>Location:</strong><br>
+                Latitude: {{ alert.latitude }}<br>
+                Longitude: {{ alert.longitude }}
+            </p>
+            {% endif %}
+
+            {% if alert.radius %}
+            <p>
+                <strong>Affected Radius:</strong>
+                {{ alert.radius }} meters
+            </p>
+            {% endif %}
+
+            <hr>
+
+            <h5>Description</h5>
+
+            <p>{{ alert.message }}</p>
+
+            <hr>
+
+            <p>
+                <strong>Created By:</strong>
+                {{ alert.created_by.get_full_name|default:alert.created_by.username }}
+            </p>
+
+            <p>
+                <strong>Date Created:</strong>
+                {{ alert.created_at|date:"d M Y H:i" }}
+            </p>
+
+            {% if alert.expires_at %}
+            <p>
+                <strong>Expires:</strong>
+                {{ alert.expires_at|date:"d M Y H:i" }}
+            </p>
+            {% endif %}
+
+            <p>
+                <strong>Status:</strong>
+
+                {% if alert.is_active %}
+                    <span class="badge bg-success">Active</span>
+                {% else %}
+                    <span class="badge bg-secondary">Inactive</span>
+                {% endif %}
+            </p>
+
+        </div>
+
+        <div class="card-footer">
+
+            {% if user.is_authenticated %}
+
+                {% if not has_acknowledged %}
+                    <form method="post" action="{% url 'acknowledge_alert' alert.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">Acknowledge Alert</button>
+                    </form>
+                {% else %}
+                    <button class="btn btn-success" disabled>
+                        ✓ Alert Acknowledged
+                    </button>
+                {% endif %}
+
+            {% endif %}
+
+            {% if user == alert.created_by or user.is_admin_user %}
+                <form method="post" action="{% url 'deactivate_alert' alert.id %}" class="d-inline float-end">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Deactivate Alert</button>
+                </form>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

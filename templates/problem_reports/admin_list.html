@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Problem Reports - Neighbourhood Alert{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4">Manage Problem Reports</h1>
+<form method="get" class="row g-2 align-items-end mb-4">
+    <div class="col-sm-4">
+        <label class="form-label" for="{{ filter_form.status.id_for_label }}">Filter by status</label>
+        {{ filter_form.status }}
+    </div>
+    <div class="col-auto"><button class="btn btn-primary" type="submit">Filter</button></div>
+    <div class="col-auto"><a class="btn btn-outline-secondary" href="{% url 'problem_report_admin_list' %}">Clear</a></div>
+</form>
+{% if reports %}
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead><tr><th>Reference</th><th>Title</th><th>Reporter</th><th>Submitted</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+            {% for report in reports %}
+            <tr>
+                <td>{{ report.reference }}</td>
+                <td>{{ report.title }}</td>
+                <td>{{ report.reporter.get_full_name|default:report.reporter.username }}</td>
+                <td>{{ report.submitted_at|date:"M j, Y H:i" }}</td>
+                <td><span class="badge text-bg-{{ report.status_badge_class }}">{{ report.get_status_display }}</span></td>
+                <td><a href="{% url 'problem_report_admin_detail' report.reference %}">Review</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">No problem reports match this filter.</div>
+{% endif %}
+{% endblock %}

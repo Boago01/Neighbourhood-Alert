@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Alert{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-8">
+
+            <div class="card shadow">
+
+                <div class="card-header bg-danger text-white">
+
+                    <h3>
+                        <i class="fas fa-bell"></i>
+                        Create Emergency Alert
+                    </h3>
+
+                </div>
+
+                <div class="card-body">
+
+                    <form method="POST">
+
+                        {% csrf_token %}
+                        {{ form.non_field_errors }}
+                        {{ form.latitude }}
+                        {{ form.latitude.errors }}
+                        {{ form.longitude }}
+                        {{ form.longitude.errors }}
+                        {{ form.radius }}
+                        {{ form.radius.errors }}
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Alert Title
+                            </label>
+                            {{ form.title }}
+                            {{ form.title.errors }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Alert Message
+                            </label>
+                            {{ form.message }}
+                            {{ form.message.errors }}
+                            <div class="form-text">
+                                SMS notifications include this message. 
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Priority
+                            </label>
+                            {{ form.priority }}
+                            {{ form.priority.errors }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Expires At (Optional)
+                            </label>
+                            {{ form.expires_at }}
+                            {{ form.expires_at.errors }}
+                        </div>
+
+                       
+
+                        <hr>
+
+                        <h5>
+                            <i class="fas fa-map-marker-alt text-danger"></i>
+                            Select Alert Location
+                        </h5>
+
+                        <p class="text-muted">
+                            Click the map to place the alert. Its coordinates will be included in SMS notifications.
+                        
+                        </p>
+
+                        <div id="map"
+                             style="height:450px;
+                                    border-radius:10px;
+                                    border:1px solid #ddd;">
+                        </div>
+
+                        <div class="mt-4">
+
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-save"></i>
+                                Create Alert
+                            </button>
+
+                            <a href="{% url 'alert_list' %}"
+                               class="btn btn-secondary">
+                                Cancel
+                            </a>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+window.initAlertMap = function() {
+    const alertMap = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: -28.7282, lng: 24.7499 },
+        zoom: 13,
+        mapTypeId: 'roadmap'
+    });
+    let marker = null;
+    let circle = null;
+
+    function setLocation(location) {
+        if (!marker) {
+            marker = new google.maps.Marker({
+                position: location,
+                map: alertMap,
+                draggable: true,
+                title: 'Alert Location'
+            });
+            circle = new google.maps.Circle({
+                map: alertMap,
+                center: location,
+                radius: 500,
+                strokeColor: '#ff0000',
+                fillColor: '#ff4d4d',
+                fillOpacity: 0.25
+            });
+            marker.addListener('drag', function() {
+                setLocation(marker.getPosition());
+            });
+        } else {
+            marker.setPosition(location);
+            circle.setCenter(location);
+        }
+        document.getElementById('id_latitude').value = location.lat().toFixed(8);
+        document.getElementById('id_longitude').value = location.lng().toFixed(8);
+        document.getElementById('id_radius').value = 500;
+    }
+
+    alertMap.addListener('click', function(event) {
+        setLocation(event.latLng);
+    });
+};
+</script>
+{% include "includes/google_maps_loader.html" with callback="initAlertMap" %}
+
+{% endblock %}

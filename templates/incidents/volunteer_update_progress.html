@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Update Progress - Neighbourhood Alert{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'volunteer_assigned_cases' %}">My Assigned Cases</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'volunteer_assignment_detail' assignment.id %}">{{ assignment.incident.title }}</a></li>
+            <li class="breadcrumb-item active">Update Progress</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-info">
+                    <h5 class="mb-0 text-white"><i class="fas fa-pen-to-square me-2"></i>Update Progress</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-3">
+                        <strong>Case:</strong> {{ assignment.incident.title }}<br>
+                        <strong>Current Status:</strong> 
+                        <span class="badge bg-{{ assignment.get_status_color }}">{{ assignment.get_status_display }}</span>
+                    </div>
+
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <!-- Progress Notes -->
+                        <div class="mb-3">
+                            <label for="progress_notes" class="form-label">
+                                <strong>Progress Notes</strong>
+                                <span class="text-muted">(Required)</span>
+                            </label>
+                            {{ form.progress_notes }}
+                            {% for error in form.progress_notes.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                            <small class="form-text text-muted">Provide detailed information about your progress on this case</small>
+                        </div>
+
+                        <!-- Image Upload -->
+                        <div class="mb-3">
+                            <label for="image" class="form-label">
+                                <strong>Upload Evidence/Image</strong>
+                                <span class="text-muted">(Optional)</span>
+                            </label>
+                            {{ form.image }}
+                            {% for error in form.image.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                            <small class="form-text text-muted">Upload an image no larger than 5 MB</small>
+                            
+                            {% if assignment.volunteer_images %}
+                            <div class="mt-2">
+                                <strong>Current Image:</strong>
+                                <div class="mt-2">
+                                    <img src="{{ assignment.volunteer_images.url }}" alt="Current Evidence" class="img-fluid" style="max-width: 300px; border-radius: 8px;">
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Submit -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-info flex-grow-1">
+                                <i class="fas fa-check-circle me-2"></i>Submit Progress Update
+                            </button>
+                            <a href="{% url 'volunteer_assignment_detail' assignment.id %}" class="btn btn-outline-secondary flex-grow-1">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

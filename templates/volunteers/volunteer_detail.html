@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Volunteer Details{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+  
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <p><strong>Skills:</strong> {{ volunteer.skills }}</p>
+                    <p><strong>Availability:</strong> {{ volunteer.get_availability_display }}</p>
+                    <p><strong>Rating:</strong> {{ volunteer.rating }}</p>
+                    <p>{{ volunteer.bio }}</p>
+                    {% if can_review %}
+                        {% if has_reviewed %}
+                            <p class="text-muted mb-0">You have already reviewed this volunteer.</p>
+                        {% else %}
+                            <a href="{% url 'add_volunteer_review' volunteer.id %}" class="btn btn-outline-primary">Rate this volunteer</a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <h5>Recent Responses</h5>
+            <ul class="list-group mb-3">
+                {% for response in responses %}
+                    <li class="list-group-item">
+                        <a href="{% url 'incident_detail' incident_id=response.incident.id %}">{{ response.incident.title }}</a>
+                        <span class="text-muted">— {{ response.status }}</span>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item">No responses yet.</li>
+                {% endfor %}
+            </ul>
+
+            <h5>Reviews</h5>
+            <ul class="list-group mb-3">
+                {% for review in reviews %}
+                    <li class="list-group-item">
+                        <strong>{{ review.reviewer.get_full_name|default:review.reviewer.username }}</strong>
+                        <span class="float-end">{{ review.rating }}/5</span>
+                        <div>{{ review.comment }}</div>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item">No reviews yet.</li>
+                {% endfor %}
+            </ul>
+
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <p><strong>Joined:</strong> {{ volunteer.user.date_joined|date:"F j, Y" }}</p>
+                    <p><strong>Total responses:</strong> {{ volunteer.total_responses }}</p>
+                    <p><strong>Contact:</strong> {{ volunteer.user.phone_number|default:"Not provided" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

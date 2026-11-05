@@ -1,0 +1,10 @@
+.env
+db.sqlite3
+private_problem_reports/
+media/
+staticfiles/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+/PHASE1_EVIDENCE_REPORT.md

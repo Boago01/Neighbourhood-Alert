@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}Assign Volunteers - Neighbourhood Alert{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'police_my_cases' %}">My Cases</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'incident_detail' incident.id %}">{{ incident.title }}</a></li>
+            <li class="breadcrumb-item active">Assign Volunteers</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Assignment Form -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-user-plus me-2"></i>Assign Volunteers to Case</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-4">
+                        <strong>Case Details:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li><strong>Title:</strong> {{ incident.title }}</li>
+                            <li><strong>Category:</strong> {{ incident.get_category_display }}</li>
+                            <li><strong>Severity:</strong> <span class="badge badge-{{ incident.severity }}">{{ incident.get_severity_display }}</span></li>
+                            <li><strong>Location:</strong> {{ incident.location_description }}</li>
+                        </ul>
+                    </div>
+
+                    <form method="POST">
+                        {% csrf_token %}
+
+                        <!-- Volunteers Selection -->
+                        <div class="mb-3">
+                            <label for="volunteers" class="form-label">
+                                <strong>Select Volunteers to Assign</strong>
+                            </label>
+                            <div id="volunteers-list" style="max-height: 400px; overflow-y: auto; border: 1px solid #E5E7EB; border-radius: 8px; padding: 10px;">
+                                {% if approved_volunteers %}
+                                    {% for volunteer in approved_volunteers %}
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" name="volunteers" value="{{ volunteer.id }}" id="volunteer-{{ volunteer.id }}">
+                                        <label class="form-check-label" for="volunteer-{{ volunteer.id }}">
+                                            <strong>{{ volunteer.get_full_name }}</strong>
+                                            {% if volunteer.volunteer.skills %}
+                                            <br><small class="text-muted">Skills: {{ volunteer.volunteer.skills }}</small>
+                                            {% endif %}
+                                            <br><small class="text-muted">Availability: {{ volunteer.volunteer.get_availability_display }}</small>
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    No approved volunteers available at the moment.
+                                </div>
+                                {% endif %}
+                            </div>
+                            <small class="form-text text-muted mt-2">Select one or more volunteers to assign to this case</small>
+                        </div>
+
+                        <!-- Priority Selection -->
+                        <div class="mb-3">
+                            <label for="priority" class="form-label">
+                                <strong>Assignment Priority</strong>
+                            </label>
+                            <select class="form-select" name="priority" id="priority" required>
+                                <option value="" selected disabled>Select Priority Level</option>
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                                <option value="critical">Critical</option>
+                            </select>
+                        </div>
+
+                        <!-- Assignment Notes -->
+                        <div class="mb-3">
+                            <label for="assignment_notes" class="form-label">
+                                <strong>Assignment Notes</strong>
+                                <span class="text-muted">(Optional)</span>
+                            </label>
+                            <textarea class="form-control" name="assignment_notes" id="assignment_notes" rows="4" placeholder="Provide any specific instructions or context for the volunteers..."></textarea>
+                            <small class="form-text text-muted">These notes will be visible to assigned volunteers</small>
+                        </div>
+
+                        <!-- Submit -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-check-circle me-2"></i>Assign Volunteers
+                            </button>
+                            <a href="{% url 'incident_detail' incident.id %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Already Assigned Volunteers -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-check-circle me-2"></i>Already Assigned</h5>
+                </div>
+                <div class="card-body">
+                    {% if assigned_volunteers %}
+                    <div class="list-group list-group-flush">
+                        {% for assignment in assigned_volunteers %}
+                        <div class="list-group-item d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>{{ assignment.volunteer.get_full_name }}</strong>
+                                <br><small class="text-muted">
+                                    <span class="badge bg-{{ assignment.get_status_color }}">{{ assignment.get_status_display }}</span>
+                                </small>
+                                {% if assignment.priority %}
+                                <br><small class="text-muted">Priority: <strong>{{ assignment.get_priority_display }}</strong></small>
+                                {% endif %}
+                            </div>
+                            <a href="{% url 'police_remove_volunteer' assignment.id %}" class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle me-2"></i>No volunteers assigned yet.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .badge-low { background-color: #10B981 !important; }
+    .badge-medium { background-color: #3B82F6 !important; }
+    .badge-high { background-color: #F59E0B !important; }
+    .badge-critical { background-color: #DC2626 !important; }
+</style>
+{% endblock %}

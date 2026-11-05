@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+
+{% block title %}Crime Heatmap - Neighbourhood Alert{% endblock %}
+
+{% block extra_css %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="max-width: 1600px; margin: 0 auto; padding: var(--space-lg);">
+    <div class="page-header">
+        <h1><i class="fas fa-fire" style="color: var(--secondary-color);"></i> Crime Heatmap</h1>
+        <p>Explore incident hotspots across Kimberley, Northern Cape.</p>
+    </div>
+
+    <!-- Map display -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-map-marked-alt me-2"></i> Map display
+        </div>
+        <div class="card-body">
+            {% if can_filter_incidents %}
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Severity</label>
+                    <select name="severity" class="form-select">
+                        <option value="">All Severities</option>
+                        {% for value, label in severities %}
+                        <option value="{{ value }}" {% if severity_filter == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Category</label>
+                    <select name="category" class="form-select">
+                        <option value="">All Categories</option>
+                        {% for value, label in categories %}
+                        <option value="{{ value }}" {% if category == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date From</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ date_from|default:'' }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date To</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ date_to|default:'' }}">
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter me-2"></i>Apply Filters
+                    </button>
+                    <a href="{% url 'heatmap' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-2"></i>Clear
+                    </a>
+                </div>
+            </form>
+            {% else %}
+            <p class="mb-0">Community view shows approximate incident density by area. Areas with fewer than two reports are hidden.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Legend Cards -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    {% if can_view_exact_locations %}
+                    <h6 class="mb-2">Severity:</h6>
+                    <div class="d-flex gap-4 flex-wrap">
+                        <span><span class="badge bg-success">Low</span></span>
+                        <span><span class="badge bg-info">Medium</span></span>
+                        <span><span class="badge bg-warning">High</span></span>
+                        <span><span class="badge bg-danger">Critical</span></span>
+                    </div>
+                    {% else %}
+                    <h6 class="mb-2">Incident density:</h6>
+                    <div class="d-flex align-items-center gap-3">
+                        <span>Lower</span>
+                        <span aria-label="Density increases from low to high"
+                              style="display: inline-block; width: 180px; height: 14px; border-radius: 7px; background: linear-gradient(to right, blue, lime, yellow, orange, red);"></span>
+                        <span>Higher</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+       
+    </div>
+
+    <!-- Map -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div id="heatmap" style="height: 600px; width: 100%; border-radius: var(--radius-lg);"></div>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="dashboard-widget text-center">
+                <div class="widget-value">{{ incident_count }}</div>
+                <div class="widget-label">Total Incidents Shown</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="dashboard-widget text-center">
+                <div class="widget-value" style="color: var(--secondary-color);">
+                    {{ map_points|length }}
+                </div>
+                <div class="widget-label">Hotspot Markers</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="dashboard-widget text-center">
+                <div class="widget-value" style="color: #F97316;">
+                    {{ map_points|length }}
+                </div>
+                <div class="widget-label">Waypoints</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const incidents = [
+    {% for point in map_points %}
+    {
+        lat: {{ point.lat }},
+        lng: {{ point.lng }},
+        severity: '{{ point.severity|default:""|escapejs }}',
+        title: '{{ point.title|default:""|escapejs }}',
+        category: '{{ point.category|default:""|escapejs }}',
+        id: {{ point.id|default:"null" }},
+        count: {{ point.count }},
+        exact: {{ point.exact|yesno:"true,false" }}
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+const heatData = [];
+window.initHeatmap = function() {
+    const heatmap = new google.maps.Map(document.getElementById('heatmap'), {
+        center: { lat: -28.7282, lng: 24.7499 },
+        zoom: 12,
+        mapTypeId: 'roadmap'
+    });
+    const bounds = new google.maps.LatLngBounds();
+    const severityColors = {
+        low: '#16A34A',
+        medium: '#3B82F6',
+        high: '#F97316',
+        critical: '#DC2626'
+    };
+    incidents.forEach(function(incident) {
+        const location = new google.maps.LatLng(incident.lat, incident.lng);
+        const weight = Math.min(incident.count, 10) / 10;
+        heatData.push({ location: location, weight: weight });
+        bounds.extend(location);
+
+        const marker = new google.maps.Marker({
+            position: location,
+            map: heatmap,
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: Math.min(6 + incident.count, 14),
+                fillColor: incident.exact
+                    ? (severityColors[incident.severity] || '#3B82F6')
+                    : '#3B82F6',
+                fillOpacity: 0.9,
+                strokeColor: '#FFFFFF',
+                strokeWeight: 2
+            }
+        });
+        const content = document.createElement('div');
+        content.style.minWidth = '180px';
+        const title = document.createElement('strong');
+        title.textContent = incident.exact ? incident.title : 'Approximate area';
+        content.appendChild(title);
+        content.appendChild(document.createElement('br'));
+        if (incident.exact) {
+            content.appendChild(document.createTextNode('Category: ' + incident.category));
+            content.appendChild(document.createElement('br'));
+            content.appendChild(document.createTextNode(
+                'Severity: ' + incident.severity.charAt(0).toUpperCase() + incident.severity.slice(1)
+            ));
+            content.appendChild(document.createElement('br'));
+            const link = document.createElement('a');
+            link.href = '/incidents/' + encodeURIComponent(incident.id) + '/';
+            link.textContent = 'View Details';
+            content.appendChild(link);
+        } else {
+            content.appendChild(document.createTextNode(
+                incident.count + ' incident(s) in this area'
+            ));
+        }
+        const infoWindow = new google.maps.InfoWindow({ content: content });
+        marker.addListener('click', function() {
+            infoWindow.open({ map: heatmap, anchor: marker });
+        });
+    });
+
+    if (heatData.length) {
+        new google.maps.visualization.HeatmapLayer({
+            data: heatData,
+            map: heatmap,
+            radius: 25,
+            opacity: 0.6,
+            gradient: [
+                'rgba(0, 0, 255, 0)',
+                'blue',
+                'lime',
+                'yellow',
+                'orange',
+                'red'
+            ]
+        });
+        heatmap.fitBounds(bounds);
+    }
+
+    [
+        { lat: -28.7282, lng: 24.7499, name: 'Kimberley CBD' },
+        { lat: -28.7400, lng: 24.7600, name: 'Galeshewe' },
+        { lat: -28.7100, lng: 24.7300, name: 'Roodepan' },
+        { lat: -28.7350, lng: 24.7450, name: 'Civic Centre' },
+        { lat: -28.7200, lng: 24.7550, name: 'Kimberley Hospital' },
+        { lat: -28.7500, lng: 24.7700, name: 'Homevale' },
+        { lat: -28.7050, lng: 24.7400, name: 'Greenpoint' }
+    ].forEach(function(area) {
+        new google.maps.Marker({
+            position: { lat: area.lat, lng: area.lng },
+            map: heatmap,
+            title: area.name,
+            label: { text: area.name, color: '#1F2937', fontSize: '11px' },
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 0,
+                fillOpacity: 0,
+                strokeOpacity: 0
+            },
+            clickable: false
+        });
+    });
+};
+</script>
+{% include "includes/google_maps_loader.html" with callback="initHeatmap" libraries="visualization" %}
+{% endblock %}

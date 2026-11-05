@@ -1,0 +1,24 @@
+<div class="card">
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Category</dt><dd class="col-sm-9">{{ report.get_category_display }}</dd>
+            <dt class="col-sm-3">Submitted</dt><dd class="col-sm-9">{{ report.submitted_at|date:"M j, Y H:i" }}</dd>
+            <dt class="col-sm-3">Affected page</dt><dd class="col-sm-9"><code>{{ report.page_path }}</code></dd>
+            <dt class="col-sm-3">Problem description</dt><dd class="col-sm-9">{{ report.description|linebreaksbr }}</dd>
+            <dt class="col-sm-3">Expected behaviour</dt><dd class="col-sm-9">{{ report.expected_behavior|linebreaksbr }}</dd>
+            {% if report.screenshot %}
+            <dt class="col-sm-3">Screenshot</dt>
+            <dd class="col-sm-9"><a href="{% url 'problem_report_screenshot' report.reference %}">Download screenshot</a></dd>
+            {% endif %}
+            {% if is_administrator %}
+            <dt class="col-sm-3">Reporter</dt><dd class="col-sm-9">{{ report.reporter.get_full_name|default:report.reporter.username }}</dd>
+            {% if report.reviewed_by %}
+            <dt class="col-sm-3">Last reviewed by</dt><dd class="col-sm-9">{{ report.reviewed_by.get_full_name|default:report.reviewed_by.username }}</dd>
+            {% endif %}
+            {% if report.administrator_notes %}
+            <dt class="col-sm-3">Administrator notes</dt><dd class="col-sm-9">{{ report.administrator_notes|linebreaksbr }}</dd>
+            {% endif %}
+            {% endif %}
+        </dl>
+    </div>
+</div>

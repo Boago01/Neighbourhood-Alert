@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Neighbourhood Alert{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="row align-items-center py-5">
+    <div class="col-lg-6">
+        <h1 class="display-4 fw-bold mb-4" style="color: var(--primary-color);">
+            Keeping Kimberley Safe Together
+        </h1>
+        <p class="lead mb-4">
+            Report incidents, coordinate with volunteers, and work with local police to build a safer community in Kimberley, Northern Cape.
+        </p>
+        <div class="d-flex gap-3">
+            {% if user.is_authenticated %}
+            <a href="{% url 'report_incident' %}" class="btn btn-danger btn-lg">
+                <i class="fas fa-exclamation-circle me-2"></i>Report Incident
+            </a>
+            <a href="{% url 'incident_feed' %}" class="btn btn-primary btn-lg">
+                <i class="fas fa-list me-2"></i>View Incidents
+            </a>
+            {% else %}
+            <a href="{% url 'register' %}" class="btn btn-primary btn-lg">
+                <i class="fas fa-user-plus me-2"></i>Join Community
+            </a>
+            <a href="{% url 'incident_feed' %}" class="btn btn-outline-primary btn-lg">
+                <i class="fas fa-list me-2"></i>View Incidents
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card shadow">
+            <div class="card-body p-0">
+                <div id="hero-map" style="height: 400px; border-radius: 8px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Section -->
+<div class="row mb-5">
+    <div class="col-md-3">
+        <div class="dashboard-widget stat-card text-center">
+            <i class="fas fa-exclamation-triangle widget-icon mb-3"></i>
+            <div class="widget-value">{{ total_incidents }}</div>
+            <div class="widget-label">Total Incidents</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="dashboard-widget stat-card text-center">
+            <i class="fas fa-check-circle widget-icon mb-3" style="color: var(--success-color);"></i>
+            <div class="widget-value" style="color: var(--success-color);">{{ resolved_incidents }}</div>
+            <div class="widget-label">Resolved Cases</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="dashboard-widget stat-card text-center">
+            <i class="fas fa-hands-helping widget-icon mb-3" style="color: var(--accent-color);"></i>
+            <div class="widget-value" style="color: var(--accent-color);">{{ active_volunteers }}</div>
+            <div class="widget-label">Active Volunteers</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="dashboard-widget stat-card text-center">
+            <i class="fas fa-bell widget-icon mb-3" style="color: var(--secondary-color);"></i>
+            <div class="widget-value" style="color: var(--secondary-color);">{{ recent_alerts|length }}</div>
+            <div class="widget-label">Active Alerts</div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Alerts -->
+{% if recent_alerts %}
+<div class="row mb-5">
+    <div class="col-12">
+        <h3 class="mb-4"><i class="fas fa-bell me-2" style="color: var(--secondary-color);"></i>Recent Alerts</h3>
+        <div class="row">
+            {% for alert in recent_alerts %}
+            <div class="col-md-4 mb-3">
+                <div class="card alert-{{ alert.get_priority_color }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ alert.title }}</h5>
+                        <p class="card-text">{{ alert.message|truncatewords:20 }}</p>
+                        <a href="{% url 'alert_detail' alert.id %}" class="btn btn-light btn-sm">View Details</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Features Section -->
+<div class="row py-5">
+    <div class="col-12 text-center mb-5">
+        <h2>How It Works</h2>
+        <p class="text-muted">Our community-driven approach to safety</p>
+    </div>
+    <div class="col-md-3 text-center mb-4">
+        <div class="p-4">
+            <i class="fas fa-mobile-alt fa-3x mb-3" style="color: var(--primary-color);"></i>
+            <h5>Report Incidents</h5>
+            <p class="text-muted">Quickly report crimes or suspicious activities with location and photos.</p>
+        </div>
+    </div>
+    <div class="col-md-3 text-center mb-4">
+        <div class="p-4">
+            <i class="fas fa-users fa-3x mb-3" style="color: var(--accent-color);"></i>
+            <h5>Volunteer Response</h5>
+            <p class="text-muted">Verified volunteers respond and assist in the community.</p>
+        </div>
+    </div>
+    <div class="col-md-3 text-center mb-4">
+        <div class="p-4">
+            <i class="fas fa-shield-alt fa-3x mb-3" style="color: var(--secondary-color);"></i>
+            <h5>Police Coordination</h5>
+            <p class="text-muted">Local police investigate and resolve reported incidents.</p>
+        </div>
+    </div>
+    <div class="col-md-3 text-center mb-4">
+        <div class="p-4">
+            <i class="fas fa-chart-area fa-3x mb-3" style="color: var(--success-color);"></i>
+            <h5>Crime Analytics</h5>
+            <p class="text-muted">Visualize crime hotspots and trends in your neighborhood.</p>
+        </div>
+    </div>
+</div>
+
+<!-- User Roles Section -->
+<div class="row py-5 bg-white rounded">
+    <div class="col-12 text-center mb-5">
+        <h2>Join Our Community</h2>
+        <p class="text-muted">Choose how you want to contribute to community safety</p>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-home fa-2x mb-3" style="color: var(--primary-color);"></i>
+                <h5>Resident</h5>
+                <p class="text-muted">Report incidents, view crime data, and support volunteers.</p>
+                <a href="{% url 'register' %}" class="btn btn-outline-primary btn-sm">Register as Resident</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-hands-helping fa-2x mb-3" style="color: var(--accent-color);"></i>
+                <h5>Volunteer</h5>
+                <p class="text-muted">Respond to incidents and help keep the community safe.</p>
+                <a href="{% url 'volunteer_application' %}" class="btn btn-outline-warning btn-sm">Apply as Volunteer</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-user-shield fa-2x mb-3" style="color: var(--secondary-color);"></i>
+                <h5>Police Officer</h5>
+                <p class="text-muted">Investigate incidents and coordinate with the community.</p>
+                <p class="text-muted small">Contact admin for police account setup</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-donate fa-2x mb-3" style="color: var(--success-color);"></i>
+                <h5>Donor</h5>
+                <p class="text-muted">Support volunteers with donations to help their work.</p>
+                <a href="{% url 'donation_list' %}" class="btn btn-outline-success btn-sm">View Campaigns</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+window.initHomeMap = function() {
+    const homeMap = new google.maps.Map(document.getElementById('hero-map'), {
+        center: { lat: -28.7282, lng: 24.7499 },
+        zoom: 12,
+        mapTypeId: 'roadmap'
+    });
+
+    [
+        { lat: -28.7282, lng: 24.7499, title: 'Kimberley CBD' },
+        { lat: -28.7400, lng: 24.7600, title: 'Galeshewe' },
+        { lat: -28.7100, lng: 24.7300, title: 'Roodepan' }
+    ].forEach(function(location) {
+        new google.maps.Marker({
+            position: { lat: location.lat, lng: location.lng },
+            map: homeMap,
+            title: location.title
+        });
+    });
+};
+</script>
+{% include "includes/google_maps_loader.html" with callback="initHomeMap" %}
+{% endblock %}

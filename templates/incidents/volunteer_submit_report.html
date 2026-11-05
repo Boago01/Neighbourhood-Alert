@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Submit Completion Report - Neighbourhood Alert{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'volunteer_assigned_cases' %}">My Assigned Cases</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'volunteer_assignment_detail' assignment.id %}">{{ assignment.incident.title }}</a></li>
+            <li class="breadcrumb-item active">Submit Completion Report</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-clipboard-check me-2"></i>Submit Completion Report</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Case:</strong> {{ assignment.incident.title }}</p>
+                    <p><strong>Current status:</strong> {{ assignment.get_status_display }}</p>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="completion_report" class="form-label">Completion report</label>
+                            <textarea class="form-control" name="completion_report" id="completion_report" rows="6" required>{{ assignment.completion_report }}</textarea>
+                            <div class="form-text">Describe the work completed and any relevant outcome.</div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">Submit Report</button>
+                            <a href="{% url 'volunteer_assignment_detail' assignment.id %}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

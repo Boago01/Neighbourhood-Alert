@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}My Problem Reports - Neighbourhood Alert{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">My Problem Reports</h1>
+</div>
+{% if reports %}
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead><tr><th>Reference</th><th>Title</th><th>Submitted</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+            {% for report in reports %}
+            <tr>
+                <td>{{ report.reference }}</td>
+                <td>{{ report.title }}</td>
+                <td>{{ report.submitted_at|date:"M j, Y H:i" }}</td>
+                <td><span class="badge text-bg-{{ report.status_badge_class }}">{{ report.get_status_display }}</span></td>
+                <td><a href="{% url 'problem_report_detail' report.reference %}">View report</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <h2 class="h5">No problem reports yet</h2>
+    <p class="mb-0">Reports you submit will appear here with their latest status.</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,7 @@
+{% if GOOGLE_MAPS_API_KEY %}
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY|urlencode }}&callback={{ callback|urlencode }}{% if libraries %}&libraries={{ libraries|urlencode }}{% endif %}"></script>
+{% else %}
+<div class="alert alert-warning mt-2" role="alert">
+    Google Maps is unavailable. Configure <code>GOOGLE_MAPS_API_KEY</code> in the environment.
+</div>
+{% endif %}

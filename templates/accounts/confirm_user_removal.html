@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Remove User Account - Neighbourhood Alert{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-header">
+                <h1 class="h4 mb-0">
+                    <i class="fas fa-user-minus me-2"></i>Remove User Account
+                </h1>
+            </div>
+            <div class="card-body">
+                <p>
+                    Remove access for
+                    <strong>{{ target_user.get_full_name|default:target_user.username }}</strong>
+                    ({{ target_user.get_role_display }})?
+                </p>
+                <div class="alert alert-warning">
+                    This will disable login, remove account permissions, and clear
+                    personal details from the account and emergency-contact profile.
+                    The account record will remain under an anonymous username so
+                    incident and other activity history is preserved.
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="confirm" value="yes">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-user-minus me-2"></i>Confirm Removal
+                    </button>
+                    <a href="{% url 'user_management' %}" class="btn btn-outline-secondary">
+                        Cancel
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

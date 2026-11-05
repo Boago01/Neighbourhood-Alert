@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if campaign %}Donate Equipment{% else %}Donate to Volunteer{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            {% if campaign %}
+                <h2><i class="fas fa-box-open me-2"></i>Donate Equipment</h2>
+                <p class="text-muted">Choose an item and donate equipment to support this campaign.</p>
+            {% else %}
+                <h2><i class="fas fa-hand-holding-heart me-2"></i>Donate to {{ volunteer.user.get_full_name|default:volunteer.user.username }}</h2>
+                <p class="text-muted">Support this volunteer with equipment or supplies.</p>
+            {% endif %}
+        </div>
+        <div class="col-md-4 text-end">
+            {% if campaign %}
+                <a href="{% url 'campaign_detail' campaign.id %}" class="btn btn-secondary">Back to Campaign</a>
+            {% else %}
+                <a href="{% url 'volunteer_detail' volunteer_id=volunteer.id %}" class="btn btn-secondary">Back to Volunteer</a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card shadow">
+        <div class="card-body">
+            {% if campaign %}
+                <h4 class="mb-3">{{ campaign.title }}</h4>
+                <p class="text-muted">{{ campaign.description }}</p>
+            {% endif %}
+            <form method="POST">
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+                {% if campaign %}
+                    <div class="mb-3">
+                        {{ form.campaign_item.label_tag }}
+                        {{ form.campaign_item }}
+                        {{ form.campaign_item.errors }}
+                    </div>
+                {% else %}
+                    <div class="mb-3">
+                        {{ form.equipment_name.label_tag }}
+                        {{ form.equipment_name }}
+                        {{ form.equipment_name.errors }}
+                    </div>
+                {% endif %}
+                <div class="mb-3">
+                    {{ form.quantity.label_tag }}
+                    {{ form.quantity }}
+                    {{ form.quantity.errors }}
+                </div>
+                <div class="mb-3">
+                    {{ form.condition.label_tag }}
+                    {{ form.condition }}
+                    {{ form.condition.errors }}
+                </div>
+                <div class="mb-3">
+                    {{ form.pickup_address.label_tag }}
+                    {{ form.pickup_address }}
+                    {{ form.pickup_address.errors }}
+                </div>
+                <div class="mb-3">
+                    {{ form.phone_number.label_tag }}
+                    {{ form.phone_number }}
+                    {{ form.phone_number.errors }}
+                </div>
+                <div class="mb-3">
+                    {{ form.message.label_tag }}
+                    {{ form.message }}
+                    {{ form.message.errors }}
+                </div>
+                {% if campaign or request.user.role == 'resident' %}
+                    <button class="btn btn-success">Submit Donation</button>
+                {% else %}
+                    <button class="btn btn-outline-secondary" disabled>Only residents can donate</button>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

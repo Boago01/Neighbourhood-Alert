@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ campaign.title }} Details{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2>{{ campaign.title }}</h2>
+        <p class="text-muted">{{ campaign.description }}</p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        {% if campaign.created_by == user %}
+        <a href="{% url 'delete_campaign' campaign.id %}" class="btn btn-outline-danger me-2">
+            <i class="fas fa-trash me-2"></i>Delete Campaign
+        </a>
+        {% endif %}
+        {% if user.is_resident %}
+        <a href="{% url 'donate_to_campaign' campaign.id %}" class="btn btn-success">
+            <i class="fas fa-hand-holding-heart me-2"></i>Donate Equipment
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-box-open me-2"></i>Items Needed
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for item in campaign.items.all %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ item.name }}</strong><br>
+                        <small class="text-muted">Needed {{ item.quantity_needed }}, received {{ item.quantity_received }}</small>
+                    </div>
+                    <span class="badge bg-primary rounded-pill">{{ item.quantity_received }}/{{ item.quantity_needed }}</span>
+                </li>
+                {% empty %}
+                <li class="list-group-item">No needed items defined.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-hand-holding-heart me-2"></i>Donation Requests
+            </div>
+            <div class="card-body">
+                {% if donations %}
+                <div class="list-group">
+                    {% for donation in donations %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ donation.equipment_name }}</strong> x {{ donation.quantity }}
+                                <div class="small text-muted">{{ donation.condition }}</div>
+                                {% if can_manage_donations %}
+                                <div class="small text-muted">Pickup: {{ donation.pickup_address }}</div>
+                                {% elif donation.donor_id == user.id %}
+                                <div class="small text-muted">Your pickup address: {{ donation.pickup_address }}</div>
+                                {% endif %}
+                            </div>
+                            <span class="badge bg-{{ donation.status|lower }} text-capitalize">{{ donation.get_status_display }}</span>
+                        </div>
+                        <div class="mt-2">
+                            {% if can_manage_donations %}
+                            <small>Donor: {% if donation.is_anonymous %}Anonymous{% else %}{{ donation.donor.get_full_name|default:donation.donor.username }}{% endif %}</small>
+                            {% elif donation.donor_id == user.id %}
+                            <small>Donor: You{% if donation.is_anonymous %} (anonymous){% endif %}</small>
+                            {% endif %}
+                            {% if can_manage_donations and donation.status != 'completed' %}
+                            <div class="mt-2">
+                                {% for status, label, button_class in donation_status_actions %}
+                                <form method="post" action="{% url 'update_donation_status' campaign.id donation.id status %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm {{ button_class }} me-2">{{ label }}</button>
+                                </form>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">
+                    {% if can_manage_donations %}
+                    No donations yet.
+                    {% else %}
+                    Donation and donor details are only visible to the campaign owner and each donor.
+                    {% endif %}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body">
+                <p><strong>Status:</strong> {{ campaign.get_status_display }}</p>
+                <p><strong>Created by:</strong> {{ campaign.created_by.get_full_name|default:campaign.created_by.username }}</p>
+                <p><strong>Created at:</strong> {{ campaign.created_at|date:'M d, Y' }}</p>
+                {% if campaign.ends_at %}
+                <p><strong>Ends at:</strong> {{ campaign.ends_at|date:'M d, Y' }}</p>
+                {% endif %}
+                <p><strong>Progress:</strong> {{ campaign.get_progress_percentage }}%</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

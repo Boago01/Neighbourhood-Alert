@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}My Campaigns{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2><i class="fas fa-clipboard-list me-2"></i>My Campaigns</h2>
+        <p class="text-muted">Manage the equipment campaigns you created, review donations, and update donation status.</p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <a href="{% url 'create_campaign' %}" class="btn btn-success">
+            <i class="fas fa-plus me-2"></i>Create Campaign
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    {% for campaign in campaigns %}
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title">{{ campaign.title }}</h5>
+                <p class="text-muted">{{ campaign.description|truncatewords:20 }}</p>
+                <div class="mb-3">
+                    <strong>Progress:</strong>
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: {{ campaign.get_progress_percentage }}%;">
+                            {{ campaign.get_progress_percentage }}%
+                        </div>
+                    </div>
+                </div>
+                <ul class="list-group mb-3">
+                    {% for item in campaign.items.all %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ item.name }}
+                        <span>{{ item.quantity_received }}/{{ item.quantity_needed }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item">No items added yet.</li>
+                    {% endfor %}
+                </ul>
+                <p class="small text-muted">Created on {{ campaign.created_at|date:'M d, Y' }}</p>
+            </div>
+            <div class="card-footer bg-white">
+                <div class="d-flex gap-2">
+                    <a href="{% url 'campaign_detail' campaign.id %}" class="btn btn-primary flex-grow-1">View Campaign</a>
+                    <a href="{% url 'delete_campaign' campaign.id %}" class="btn btn-outline-danger">Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>You have no campaigns yet. Create one to start collecting equipment donations.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

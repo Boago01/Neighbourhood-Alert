@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Close Case - Neighbourhood Alert{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'police_my_cases' %}">My Cases</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'incident_detail' incident.id %}">{{ incident.title }}</a></li>
+            <li class="breadcrumb-item active">Close Case</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-warning me-2"></i>Close Case - Confirmation</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning" role="alert">
+                        <strong><i class="fas fa-exclamation-triangle me-2"></i>Warning:</strong>
+                        Once a case is closed, it cannot be reopened. Please ensure all necessary investigation is complete.
+                    </div>
+
+                    <h6>Case Details:</h6>
+                    <div class="card bg-light mb-3">
+                        <div class="card-body">
+                            <p class="mb-2">
+                                <strong>Title:</strong><br>
+                                {{ incident.title }}
+                            </p>
+                            <p class="mb-2">
+                                <strong>Category:</strong><br>
+                                {{ incident.get_category_display }}
+                            </p>
+                            <p class="mb-2">
+                                <strong>Severity:</strong><br>
+                                <span class="badge badge-{{ incident.severity }}">{{ incident.get_severity_display }}</span>
+                            </p>
+                            <p class="mb-0">
+                                <strong>Current Status:</strong><br>
+                                <span class="badge bg-{{ incident.get_status_color }}">{{ incident.get_status_display }}</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    {% if incident.volunteer_assignments.exists %}
+                    <h6>Assigned Volunteers:</h6>
+                    <ul class="list-group mb-3">
+                        {% for assignment in incident.volunteer_assignments.all %}
+                        <li class="list-group-item">
+                            <strong>{{ assignment.volunteer.get_full_name }}</strong>
+                            <br><small class="text-muted">Status: {{ assignment.get_status_display }}</small>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+
+                    <form method="POST" class="mt-4">
+                        {% csrf_token %}
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-danger flex-grow-1">
+                                <i class="fas fa-check-circle me-2"></i>Yes, Close This Case
+                            </button>
+                            <a href="{% url 'incident_detail' incident.id %}" class="btn btn-outline-secondary flex-grow-1">
+                                <i class="fas fa-times me-2"></i>No, Go Back
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .badge-low { background-color: #10B981 !important; }
+    .badge-medium { background-color: #3B82F6 !important; }
+    .badge-high { background-color: #F59E0B !important; }
+    .badge-critical { background-color: #DC2626 !important; }
+</style>
+{% endblock %}

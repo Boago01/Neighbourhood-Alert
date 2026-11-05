@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}Community Resource Campaigns - Neighbourhood Alert{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2>
+            <i class="fas fa-box-open me-2" style="color: var(--success-color);"></i>
+            Community Resource Campaigns
+        </h2>
+        <p class="text-muted">
+            Support community volunteers by donating equipment and essential resources.
+        </p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        {% if user.is_volunteer %}
+        <a href="{% url 'create_campaign' %}" class="btn btn-success">
+            <i class="fas fa-plus me-2"></i>Create Campaign
+        </a>
+        {% endif %}
+    </div>
+</div>
+<div class="row">
+    {% for campaign in campaigns %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">{{ campaign.title }}</h5>
+                <p class="text-muted">{{ campaign.description|truncatewords:25 }}</p>
+                <hr>
+                <h6 class="text-success mb-3">Equipment Needed</h6>
+                <ul class="list-group mb-3">
+                    {% for item in campaign.items.all %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ item.name }}
+                        <span class="badge bg-primary rounded-pill">{{ item.quantity_received }}/{{ item.quantity_needed }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item">No items listed yet.</li>
+                    {% endfor %}
+                </ul>
+                {% if campaign.ends_at %}
+                <p class="small text-muted">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    Needed by {{ campaign.ends_at|date:"d M Y" }}
+                </p>
+                {% endif %}
+                <p class="small">
+                    <i class="fas fa-user me-2"></i>
+                    Requested by {{ campaign.created_by.get_full_name|default:campaign.created_by.username }}
+                </p>
+            </div>
+            <div class="card-footer bg-white">
+                {% if user.is_authenticated and user.is_resident %}
+                <a href="{% url 'donate_to_campaign' campaign.id %}" class="btn btn-success w-100">
+                    <i class="fas fa-hand-holding-heart me-2"></i>Donate Equipment
+                </a>
+                {% else %}
+                <button class="btn btn-secondary w-100" disabled>
+                    Donate Equipment (Residents only)
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>No active equipment campaigns were found.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-toolbox me-2"></i>
+                Examples of Equipment Needed
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center">
+                        <i class="fas fa-vest fa-3x text-primary mb-3"></i>
+                        <h5>Safety Equipment</h5>
+                        <p>Reflective jackets, boots, gloves, and helmets.</p>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <i class="fas fa-broadcast-tower fa-3x text-warning mb-3"></i>
+                        <h5>Communication</h5>
+                        <p>Two-way radios, whistles, and megaphones.</p>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <i class="fas fa-first-aid fa-3x text-danger mb-3"></i>
+                        <h5>Emergency Supplies</h5>
+                        <p>First aid kits, torches, batteries, and emergency lights.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-users me-2"></i>
+                Community Volunteers
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Browse our volunteers and support their community safety campaigns.</p>
+                <a href="{% url 'volunteer_list' %}" class="btn btn-primary">
+                    <i class="fas fa-user-friends me-2"></i>View Volunteers
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

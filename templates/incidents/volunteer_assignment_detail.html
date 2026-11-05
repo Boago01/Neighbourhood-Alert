@@ -1,0 +1,315 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Assignment Details - Neighbourhood Alert{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'volunteer_assigned_cases' %}">My Assigned Cases</a></li>
+            <li class="breadcrumb-item active">{{ incident.title }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Case Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-briefcase me-2"></i>{{ incident.title }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p><strong>Category:</strong> {{ incident.get_category_display }}</p>
+                            <p><strong>Severity:</strong> <span class="badge badge-{{ incident.severity }}">{{ incident.get_severity_display }}</span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Case Status:</strong> <span class="badge bg-{{ incident.get_status_color }}">{{ incident.get_status_display }}</span></p>
+                            <p><strong>Location:</strong> {{ incident.location_description }}</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <p><strong>Description:</strong></p>
+                    <p>{{ incident.description }}</p>
+                </div>
+            </div>
+
+            <!-- Assignment Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-handshake me-2"></i>Assignment Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p><strong>Assigned By:</strong> {{ assignment.assigned_by.get_full_name }}</p>
+                            <p><strong>Priority:</strong> {{ assignment.get_priority_display }}</p>
+                            <p><strong>Assigned Date:</strong> {{ assignment.assigned_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Current Status:</strong> <span class="badge bg-{{ assignment.get_status_color }}">{{ assignment.get_status_display }}</span></p>
+                            <p><strong>Last Updated:</strong> {{ assignment.last_updated|timesince }} ago</p>
+                        </div>
+                    </div>
+
+                    {% if assignment.assignment_notes %}
+                    <hr>
+                    <p><strong>Police Officer's Notes:</strong></p>
+                    <div class="alert alert-info">
+                        {{ assignment.assignment_notes|linebreaks }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Assignment Progress -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Assignment Progress</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="p-3 {% if assignment.status in 'pending' %}bg-warning bg-opacity-25{% else %}bg-success bg-opacity-25{% endif %} rounded mb-2">
+                                <i class="fas fa-hourglass-start fa-2x"></i>
+                            </div>
+                            <strong>Pending</strong>
+                            {% if assignment.assigned_at %}
+                            <p class="small text-muted">{{ assignment.assigned_at|date:"M d" }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 {% if assignment.status in 'accepted' %}bg-info bg-opacity-25{% else %}bg-success bg-opacity-25{% endif %} rounded mb-2">
+                                <i class="fas fa-handshake fa-2x"></i>
+                            </div>
+                            <strong>Accepted</strong>
+                            {% if assignment.accepted_at %}
+                            <p class="small text-muted">{{ assignment.accepted_at|date:"M d" }}</p>
+                            {% else %}
+                            <p class="small text-muted">—</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 {% if assignment.status in 'on_way,arrived,assisting' %}bg-primary bg-opacity-25{% else %}bg-success bg-opacity-25{% endif %} rounded mb-2">
+                                <i class="fas fa-route fa-2x"></i>
+                            </div>
+                            <strong>Active</strong>
+                            {% if assignment.on_way_at %}
+                            <p class="small text-muted">{{ assignment.on_way_at|date:"M d" }}</p>
+                            {% else %}
+                            <p class="small text-muted">—</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 {% if assignment.status == 'completed' %}bg-success bg-opacity-25{% endif %} rounded mb-2">
+                                <i class="fas fa-check-circle fa-2x"></i>
+                            </div>
+                            <strong>Completed</strong>
+                            {% if assignment.completed_at %}
+                            <p class="small text-muted">{{ assignment.completed_at|date:"M d" }}</p>
+                            {% else %}
+                            <p class="small text-muted">—</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Your Updates -->
+            {% if assignment.progress_notes or assignment.volunteer_images or assignment.completion_report %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Your Updates</h5>
+                </div>
+                <div class="card-body">
+                    {% if assignment.progress_notes %}
+                    <div class="mb-3">
+                        <strong>Progress Notes:</strong>
+                        <div class="alert alert-info mt-2">
+                            {{ assignment.progress_notes|linebreaks }}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if assignment.volunteer_images %}
+                    <div class="mb-3">
+                        <strong>Uploaded Evidence:</strong>
+                        <div class="mt-2">
+                            <img src="{{ assignment.volunteer_images.url }}" alt="Evidence" class="img-fluid" style="max-width: 100%; border-radius: 8px;">
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if assignment.completion_report %}
+                    <div class="mb-0">
+                        <strong>Completion Report:</strong>
+                        <div class="alert alert-success mt-2">
+                            {{ assignment.completion_report|linebreaks }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar Actions -->
+        <div class="col-lg-4">
+            <!-- Status Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>Actions</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Accept/Decline (if pending) -->
+                    {% if assignment.status == 'pending' %}
+                    <form method="POST" action="{% url 'volunteer_update_status' assignment.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="accepted">
+                        <button type="submit" class="btn btn-success w-100 mb-2">
+                            <i class="fas fa-check-circle me-2"></i>Accept Assignment
+                        </button>
+                    </form>
+                    <form method="POST" action="{% url 'volunteer_update_status' assignment.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="declined">
+                        <button type="submit" class="btn btn-danger w-100 mb-2" onclick="return confirm('Are you sure you want to decline this assignment?')">
+                            <i class="fas fa-times-circle me-2"></i>Decline Assignment
+                        </button>
+                    </form>
+
+                    <!-- Status Progression -->
+                    {% elif assignment.status == 'accepted' %}
+                    <form method="POST" action="{% url 'volunteer_update_status' assignment.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="on_way">
+                        <button type="submit" class="btn btn-primary w-100 mb-2">
+                            <i class="fas fa-arrow-right me-2"></i>Mark "On My Way"
+                        </button>
+                    </form>
+
+                    {% elif assignment.status == 'on_way' %}
+                    <form method="POST" action="{% url 'volunteer_update_status' assignment.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="arrived">
+                        <button type="submit" class="btn btn-info w-100 mb-2">
+                            <i class="fas fa-location-dot me-2"></i>Mark "Arrived"
+                        </button>
+                    </form>
+
+                    {% elif assignment.status == 'arrived' %}
+                    <form method="POST" action="{% url 'volunteer_update_status' assignment.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="assisting">
+                        <button type="submit" class="btn btn-warning w-100 mb-2">
+                            <i class="fas fa-hands-helping me-2"></i>Mark "Assisting"
+                        </button>
+                    </form>
+
+                    {% elif assignment.status == 'assisting' %}
+                    <form method="POST" action="{% url 'volunteer_update_status' assignment.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="completed">
+                        <button type="submit" class="btn btn-success w-100 mb-2">
+                            <i class="fas fa-check-double me-2"></i>Mark "Completed"
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    <!-- Update Progress / Submit Report -->
+                    {% if assignment.status != 'pending' and assignment.status != 'declined' and assignment.status != 'completed' %}
+                    <a href="{% url 'volunteer_update_progress' assignment.id %}" class="btn btn-outline-info w-100 mb-2">
+                        <i class="fas fa-pen-to-square me-2"></i>Update Progress
+                    </a>
+                    {% endif %}
+
+                    {% if assignment.status != 'pending' and assignment.status != 'declined' and assignment.status != 'completed' %}
+                    <a href="{% url 'volunteer_submit_report' assignment.id %}" class="btn btn-outline-success w-100 mb-2">
+                        <i class="fas fa-file-alt me-2"></i>Submit Completion Report
+                    </a>
+                    {% endif %}
+
+                    <!-- Back Button -->
+                    <a href="{% url 'volunteer_assigned_cases' %}" class="btn btn-outline-secondary w-100">
+                        <i class="fas fa-arrow-left me-2"></i>Back to All Cases
+                    </a>
+                </div>
+            </div>
+
+            <!-- Assignment Timeline -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-timeline me-2"></i>Timeline</h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker" style="background-color: #3B82F6;"></div>
+                            <strong>Assigned</strong>
+                            <p class="small text-muted">{{ assignment.assigned_at|date:"M d, Y H:i" }}</p>
+                        </div>
+
+                        {% if assignment.accepted_at %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker" style="background-color: #10B981;"></div>
+                            <strong>Accepted</strong>
+                            <p class="small text-muted">{{ assignment.accepted_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                        {% endif %}
+
+                        {% if assignment.on_way_at %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker" style="background-color: #8B5CF6;"></div>
+                            <strong>On My Way</strong>
+                            <p class="small text-muted">{{ assignment.on_way_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                        {% endif %}
+
+                        {% if assignment.arrived_at %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker" style="background-color: #06B6D4;"></div>
+                            <strong>Arrived</strong>
+                            <p class="small text-muted">{{ assignment.arrived_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                        {% endif %}
+
+                        {% if assignment.completed_at %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker" style="background-color: #10B981;"></div>
+                            <strong>Completed</strong>
+                            <p class="small text-muted">{{ assignment.completed_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .timeline-item {
+        padding-left: 25px;
+        margin-bottom: 15px;
+        position: relative;
+    }
+
+    .timeline-marker {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        position: absolute;
+        left: 0;
+        top: 3px;
+    }
+
+    .badge-low { background-color: #10B981 !important; }
+    .badge-medium { background-color: #3B82F6 !important; }
+    .badge-high { background-color: #F59E0B !important; }
+    .badge-critical { background-color: #DC2626 !important; }
+</style>
+{% endblock %}

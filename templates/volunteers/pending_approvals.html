@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}Pending Approvals - Neighbourhood Alert{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="fas fa-user-clock me-2" style="color: var(--accent-color);"></i>Pending Volunteer Approvals</h2>
+    </div>
+</div>
+
+<div class="row">
+    {% for volunteer in pending_volunteers %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    {% if volunteer.user.profile_picture %}
+                    <img src="{{ volunteer.user.profile_picture.url }}" alt="" class="rounded-circle me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                    {% else %}
+                    <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
+                        <i class="fas fa-user text-white fa-2x"></i>
+                    </div>
+                    {% endif %}
+                    <div>
+                        <h5 class="mb-0">{{ volunteer.user.get_full_name|default:volunteer.user.username }}</h5>
+                        <div class="text-muted">{{ volunteer.user.email }}</div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <p class="card-text">
+                    <strong><i class="fas fa-phone me-2"></i>Phone:</strong> {{ volunteer.user.phone_number }}
+                </p>
+                
+                <p class="card-text">
+                    <strong><i class="fas fa-clock me-2"></i>Availability:</strong> {{ volunteer.get_availability_display }}
+                </p>
+                
+                {% if volunteer.skills %}
+                <p class="card-text">
+                    <strong><i class="fas fa-tools me-2"></i>Skills:</strong> {{ volunteer.skills }}
+                </p>
+                {% endif %}
+                
+                <p class="card-text">
+                    <strong><i class="fas fa-comment me-2"></i>Motivation:</strong>
+                    {{ volunteer.motivation|truncatewords:30 }}
+                </p>
+                
+                {% if volunteer.experience %}
+                <p class="card-text">
+                    <strong><i class="fas fa-briefcase me-2"></i>Experience:</strong>
+                    {{ volunteer.experience|truncatewords:20 }}
+                </p>
+                {% endif %}
+                
+                <p class="card-text text-muted">
+                    <small><i class="fas fa-calendar me-2"></i>Applied: {{ volunteer.created_at|date:"M d, Y" }}</small>
+                </p>
+            </div>
+            <div class="card-footer bg-transparent">
+                <div class="d-flex gap-2">
+                    <form method="post" action="{% url 'approve_volunteer' volunteer.id %}" class="flex-fill">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="fas fa-check me-2"></i>Approve
+                        </button>
+                    </form>
+                    <a href="{% url 'reject_volunteer' volunteer.id %}" class="btn btn-outline-danger flex-fill">
+                        <i class="fas fa-times me-2"></i>Reject
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>No pending volunteer applications at this time.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

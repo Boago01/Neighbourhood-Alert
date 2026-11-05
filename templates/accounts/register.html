@@ -1,0 +1,308 @@
+
+{% extends 'base.html' %}
+
+{% block title %}Register - Neighbourhood Alert{% endblock %}
+
+{% block content %}
+
+<style>
+    .registration-card {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .role-option {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        width: 100%;
+        height: 100%;
+        padding: 15px 12px;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        background: #fff;
+        cursor: pointer;
+        transition: border-color 0.2s ease,
+                    box-shadow 0.2s ease;
+    }
+
+    .role-option:hover {
+        border-color: var(--bs-primary);
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .role-option:has(input[type="radio"]:checked) {
+        border: 2px solid var(--bs-primary);
+        background: var(--bs-tertiary-bg);
+    }
+
+    .role-option input[type="radio"] {
+        margin-top: 4px;
+        flex-shrink: 0;
+        cursor: pointer;
+    }
+
+    .role-option-content {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .role-icon {
+        font-size: 22px;
+        color: var(--bs-primary);
+    }
+
+    .role-name {
+        font-weight: 600;
+    }
+
+    .role-description {
+        color: var(--bs-secondary-color);
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    .police-link {
+        display: block;
+        height: 100%;
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .registration-card .card-header {
+        padding: 16px;
+    }
+</style>
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+
+        <div class="card shadow registration-card">
+
+            <div class="card-header text-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Create Account
+                </h4>
+            </div>
+
+            <div class="card-body p-4">
+
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <!-- Username and Email -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_username" class="form-label">
+                                Username *
+                            </label>
+                            {{ form.username }}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="id_email" class="form-label">
+                                Email *
+                            </label>
+                            {{ form.email }}
+                        </div>
+                    </div>
+
+                    <!-- First and Last Name -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_first_name" class="form-label">
+                                First Name *
+                            </label>
+                            {{ form.first_name }}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="id_last_name" class="form-label">
+                                Last Name *
+                            </label>
+                            {{ form.last_name }}
+                        </div>
+                    </div>
+
+                    <!-- Phone Number -->
+                    <div class="mb-3">
+                        <label for="id_phone_number" class="form-label">
+                            Phone Number *
+                        </label>
+                        {{ form.phone_number }}
+                    </div>
+
+                    <!-- Account Type -->
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Register as *
+                        </label>
+
+                        <div class="row g-2">
+
+                            <!-- Existing Django radio choices -->
+                            {% for choice in form.role %}
+                            <div class="col-md-4">
+                                <label
+                                    class="role-option"
+                                    for="{{ choice.id_for_label }}"
+                                >
+                                    {{ choice.tag }}
+
+                                    <span class="role-option-content">
+                                        <i class="fas fa-user-circle role-icon"></i>
+
+                                        <span class="role-name">
+                                            {{ choice.choice_label }}
+                                        </span>
+
+                                        <small class="role-description">
+                                            {% if choice.choice_label == "Resident" %}
+                                                Report incidents and receive alerts.
+                                            {% elif choice.choice_label == "Community Volunteer" %}
+                                                Help improve community safety.
+                                            {% else %}
+                                                Access community features.
+                                            {% endif %}
+                                        </small>
+                                    </span>
+                                </label>
+                            </div>
+                            {% endfor %}
+
+                            <!-- Police application option -->
+                            <div class="col-md-4">
+                                <a
+                                    href="{% url 'police_register' %}"
+                                    class="police-link"
+                                >
+                                    <div class="role-option">
+                                        <span
+                                            class="form-check-input mt-1"
+                                            aria-hidden="true"
+                                        ></span>
+
+                                        <span class="role-option-content">
+                                            <i class="fas fa-shield-alt role-icon"></i>
+
+                                            <span class="role-name">
+                                                Police Officer
+                                            </span>
+
+                                            <small class="role-description">
+                                                Apply for police access.
+                                            </small>
+                                        </span>
+                                    </div>
+                                </a>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div id="volunteer-registration-details" class="border rounded p-3 mb-3" hidden>
+                        <h6 class="mb-3">Volunteer details</h6>
+                        <div class="mb-3">
+                            <label for="{{ form.volunteer_skills.id_for_label }}" class="form-label">
+                                Skills *
+                            </label>
+                            {{ form.volunteer_skills }}
+                            {{ form.volunteer_skills.errors }}
+                        </div>
+                        <div class="mb-0">
+                            <label for="{{ form.volunteer_availability.id_for_label }}" class="form-label">
+                                Availability *
+                            </label>
+                            {{ form.volunteer_availability }}
+                            {{ form.volunteer_availability.errors }}
+                        </div>
+                    </div>
+
+                    <!-- Address -->
+                    <div class="mb-3">
+                        <label for="id_address" class="form-label">
+                            Address
+                        </label>
+                        {{ form.address }}
+                    </div>
+
+                    <!-- Passwords -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_password1" class="form-label">
+                                Password *
+                            </label>
+                            {{ form.password1 }}
+
+                            <div class="form-text">
+                                At least 8 characters
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="id_password2" class="form-label">
+                                Confirm Password *
+                            </label>
+                            {{ form.password2 }}
+                        </div>
+                    </div>
+
+                    <!-- Register Button -->
+                    <div class="d-grid">
+                        <button
+                            type="submit"
+                            class="btn btn-primary btn-lg"
+                        >
+                            <i class="fas fa-user-plus me-2"></i>
+                            Register
+                        </button>
+                    </div>
+
+                </form>
+
+                <hr class="my-4">
+
+                <!-- Login -->
+                <div class="text-center">
+                    <p class="mb-2">
+                        Already have an account?
+                    </p>
+
+                    <a
+                        href="{% url 'login' %}"
+                        class="btn btn-outline-primary"
+                    >
+                        <i class="fas fa-sign-in-alt me-2"></i>
+                        Login
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const details = document.getElementById('volunteer-registration-details');
+        const roleOptions = document.querySelectorAll('input[name="role"]');
+
+        function updateVolunteerDetails() {
+            const volunteerSelected = Array.from(roleOptions).some(
+                option => option.checked && option.value === 'volunteer'
+            );
+            details.hidden = !volunteerSelected;
+            details.querySelectorAll('input, select').forEach(function (field) {
+                field.required = volunteerSelected;
+            });
+        }
+
+        roleOptions.forEach(option => option.addEventListener('change', updateVolunteerDetails));
+        updateVolunteerDetails();
+    });
+</script>
+
+{% endblock %}

@@ -1,0 +1,73 @@
+
+{% extends 'base.html' %}
+
+{% block title %}Login - Neighbourhood Alert{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow">
+            <div class="card-header text-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                </h4>
+            </div>
+
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ next }}">
+
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            Invalid username or password. Please try again.
+                        </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label">
+                            Username
+                        </label>
+                        {{ form.username }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_password" class="form-label">
+                            Password
+                        </label>
+                        {{ form.password }}
+                    </div>
+
+                    <!-- Forgot Password Link -->
+                    <div class="text-end mb-3">
+                        <a href="{% url 'password_reset' %}"
+                           class="text-decoration-none small">
+                            Forgot password?
+                        </a>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit"
+                                class="btn btn-primary btn-lg">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                        </button>
+                    </div>
+                </form>
+
+                <hr class="my-4">
+
+                <!-- Register Link -->
+                <div class="text-center">
+                    <p class="mb-2">Don't have an account?</p>
+
+                    <a href="{% url 'register' %}"
+                       class="btn btn-outline-primary">
+                        <i class="fas fa-user-plus me-2"></i>Register
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

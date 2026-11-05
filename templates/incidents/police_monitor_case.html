@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Monitor Case - Neighbourhood Alert{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'police_my_cases' %}">My Cases</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'incident_detail' incident.id %}">{{ incident.title }}</a></li>
+            <li class="breadcrumb-item active">Monitor Activity</li>
+        </ol>
+    </nav>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1><i class="fas fa-binoculars me-2"></i>Monitor Case Activity</h1>
+            <p class="text-muted">Real-time monitoring of volunteer activity on this case</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'incident_detail' incident.id %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Case
+            </a>
+        </div>
+    </div>
+
+    <!-- Case Summary -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-briefcase me-2"></i>Case Summary</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Title:</strong> {{ incident.title }}</p>
+                    <p><strong>Category:</strong> {{ incident.get_category_display }}</p>
+                    <p><strong>Severity:</strong> <span class="badge badge-{{ incident.severity }}">{{ incident.get_severity_display }}</span></p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Status:</strong> <span class="badge bg-{{ incident.get_status_color }}">{{ incident.get_status_display }}</span></p>
+                    <p><strong>Location:</strong> {{ incident.location_description }}</p>
+                    <p><strong>Reported:</strong> {{ incident.created_at|timesince }} ago</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assigned Volunteers Monitoring -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-users me-2"></i>Assigned Volunteers ({{ assignments.count }})</h5>
+        </div>
+        <div class="card-body">
+            {% if assignments %}
+            <div class="row">
+                {% for assignment in assignments %}
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 border-{{ assignment.get_status_color }}">
+                        <div class="card-header bg-{{ assignment.get_status_color }}">
+                            <h6 class="mb-0 text-white">
+                                {{ assignment.volunteer.get_full_name }}
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <!-- Status -->
+                            <div class="mb-3">
+                                <strong>Status:</strong>
+                                <br><span class="badge bg-{{ assignment.get_status_color }}">{{ assignment.get_status_display }}</span>
+                            </div>
+
+                            <!-- Priority -->
+                            <div class="mb-3">
+                                <strong>Priority:</strong>
+                                <br>{{ assignment.get_priority_display }}
+                            </div>
+
+                            <!-- Timeline -->
+                            <div class="mb-3">
+                                <strong>Timeline:</strong>
+                                <ul class="small mb-0 mt-2">
+                                    <li>Assigned: {{ assignment.assigned_at|date:"M d, Y H:i" }}</li>
+                                    {% if assignment.accepted_at %}
+                                    <li>✓ Accepted: {{ assignment.accepted_at|date:"M d, Y H:i" }}</li>
+                                    {% endif %}
+                                    {% if assignment.on_way_at %}
+                                    <li>✓ On Way: {{ assignment.on_way_at|date:"M d, Y H:i" }}</li>
+                                    {% endif %}
+                                    {% if assignment.arrived_at %}
+                                    <li>✓ Arrived: {{ assignment.arrived_at|date:"M d, Y H:i" }}</li>
+                                    {% endif %}
+                                    {% if assignment.completed_at %}
+                                    <li>✓ Completed: {{ assignment.completed_at|date:"M d, Y H:i" }}</li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+
+                            <!-- Last Update -->
+                            <div class="mb-3">
+                                <strong>Last Updated:</strong>
+                                <br><small class="text-muted">{{ assignment.last_updated|timesince }} ago</small>
+                            </div>
+
+                            <!-- Progress Notes -->
+                            {% if assignment.progress_notes %}
+                            <div class="mb-3">
+                                <strong>Progress Notes:</strong>
+                                <div class="alert alert-info mb-0 mt-2">
+                                    {{ assignment.progress_notes|linebreaks }}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- Images -->
+                            {% if assignment.volunteer_images %}
+                            <div class="mb-3">
+                                <strong>Uploaded Images:</strong>
+                                <br><img src="{{ assignment.volunteer_images.url }}" alt="Evidence" class="img-fluid mt-2" style="max-width: 100%; border-radius: 8px;">
+                            </div>
+                            {% endif %}
+
+                            <!-- Completion Report -->
+                            {% if assignment.completion_report %}
+                            <div class="mb-3">
+                                <strong>Completion Report:</strong>
+                                <div class="alert alert-success mb-0 mt-2">
+                                    {{ assignment.completion_report|linebreaks }}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- Assignment Notes -->
+                            {% if assignment.assignment_notes %}
+                            <div class="mb-3">
+                                <strong>Your Notes to Volunteer:</strong>
+                                <div class="alert alert-light mb-0 mt-2 border">
+                                    {{ assignment.assignment_notes|linebreaks }}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer d-flex gap-2">
+                            <a href="{% url 'police_remove_volunteer' assignment.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to remove this volunteer?')">
+                                <i class="fas fa-trash me-1"></i>Remove
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="alert alert-info" role="alert">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>No volunteers assigned yet.</strong>
+                <a href="{% url 'police_assign_volunteers' incident.id %}" class="alert-link">Assign volunteers to this case</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Case Actions -->
+    <div class="mt-4 d-flex gap-2">
+        {% if incident.status != 'closed' %}
+        <a href="{% url 'police_close_case' incident.id %}" class="btn btn-danger">
+            <i class="fas fa-times-circle me-2"></i>Close Case
+        </a>
+        {% endif %}
+        <a href="{% url 'police_my_cases' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to My Cases
+        </a>
+    </div>
+</div>
+
+<style>
+    .border-pending { border-left: 4px solid #F59E0B !important; }
+    .border-accepted { border-left: 4px solid #3B82F6 !important; }
+    .border-declined { border-left: 4px solid #DC2626 !important; }
+    .border-on_way { border-left: 4px solid #8B5CF6 !important; }
+    .border-arrived { border-left: 4px solid #06B6D4 !important; }
+    .border-assisting { border-left: 4px solid #3B82F6 !important; }
+    .border-completed { border-left: 4px solid #10B981 !important; }
+    .border-cancelled { border-left: 4px solid #6B7280 !important; }
+
+    .bg-pending { background-color: #FEF3C7 !important; }
+    .bg-accepted { background-color: #DBEAFE !important; }
+    .bg-declined { background-color: #FEE2E2 !important; }
+    .bg-on_way { background-color: #EDD5FF !important; }
+    .bg-arrived { background-color: #CFFAFE !important; }
+    .bg-assisting { background-color: #DBEAFE !important; }
+    .bg-completed { background-color: #DCFCE7 !important; }
+    .bg-cancelled { background-color: #F3F4F6 !important; }
+</style>
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}Incident Feed - Neighbourhood Alert{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2><i class="fas fa-list me-2" style="color: var(--primary-color);"></i>Incident Feed</h2>
+    </div>
+    <div class="col-md-4 text-md-end">
+        {% if user.is_authenticated %}
+        <a href="{% url 'report_incident' %}" class="btn btn-danger">
+            <i class="fas fa-plus me-2"></i>Report Incident
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Filter Form -->
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="fas fa-filter me-2"></i>Filter Incidents
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-2">
+                {{ filter_form.status.label_tag }}
+                {{ filter_form.status }}
+            </div>
+            <div class="col-md-2">
+                {{ filter_form.severity.label_tag }}
+                {{ filter_form.severity }}
+            </div>
+            <div class="col-md-2">
+                {{ filter_form.category.label_tag }}
+                {{ filter_form.category }}
+            </div>
+            <div class="col-md-2">
+                {{ filter_form.date_from.label_tag }}
+                {{ filter_form.date_from }}
+            </div>
+            <div class="col-md-2">
+                {{ filter_form.date_to.label_tag }}
+                {{ filter_form.date_to }}
+            </div>
+            <div class="col-md-2">
+                {{ filter_form.search.label_tag }}
+                {{ filter_form.search }}
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-filter me-2"></i>Apply Filters
+                </button>
+                <a href="{% url 'incident_feed' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-2"></i>Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Incidents List -->
+<div class="row">
+    {% for incident in incidents %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card incident-card severity-{{ incident.severity }} h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="card-title mb-0">{{ incident.title }}</h5>
+                    <span class="badge bg-{{ incident.get_severity_color }}">
+                        {{ incident.get_severity_display }}
+                    </span>
+                </div>
+                <p class="card-text text-muted small mb-2">
+                    <i class="fas fa-tag me-1"></i>{{ incident.get_category_display }}
+                </p>
+                <p class="card-text">{{ incident.description|truncatewords:20 }}</p>
+                <p class="card-text small text-muted">
+                    <i class="fas fa-map-marker-alt me-1"></i>
+                    {{ incident.location_description|default:"Location not specified"|truncatechars:40 }}
+                </p>
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <span class="badge bg-{{ incident.get_status_color }}">
+                        {{ incident.get_status_display }}
+                    </span>
+                    <small class="text-muted">{{ incident.created_at|timesince }} ago</small>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent">
+                <a href="{% url 'incident_detail' incident.id %}" class="btn btn-primary btn-sm w-100">
+                    <i class="fas fa-eye me-2"></i>View Details
+                </a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>No incidents found matching your criteria.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

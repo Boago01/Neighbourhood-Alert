@@ -1,0 +1,454 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Neighbourhood Alert - Community Crime Management System{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #1E40AF;
+            --primary-light: #3B82F6;
+            --primary-dark: #1E3A8A;
+            --secondary-color: #DC2626;
+            --accent-color: #F59E0B;
+            --success-color: #10B981;
+            --bg-color: #FFFFFF;
+            --text-color: #1F2937;
+            --light-bg: #F8FAFC;
+            --border-color: #E5E7EB;
+        }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        main {
+            flex: 1;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%) !important;
+            box-shadow: 0 2px 10px rgba(30, 64, 175, 0.3);
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+            color: white !important;
+            font-size: 1.4rem;
+        }
+        
+        .nav-link {
+            color: rgba(255, 255, 255, 0.9) !important;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            color: white !important;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            border: none;
+            box-shadow: 0 4px 6px rgba(30, 64, 175, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(30, 64, 175, 0.3);
+        }
+        
+        .btn-outline-primary {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
+            border: none;
+            box-shadow: 0 4px 6px rgba(220, 38, 38, 0.2);
+        }
+        
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #B91C1C 0%, #DC2626 100%);
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            border: none;
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+            border: none;
+            color: white;
+        }
+        
+        .card {
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            background-color: white;
+        }
+        
+        .card:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            font-weight: 600;
+            border-bottom: none;
+        }
+        
+        .dashboard-widget {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .dashboard-widget:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(30, 64, 175, 0.15);
+        }
+        
+        .widget-icon {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+        
+        .widget-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary-dark);
+        }
+        
+        .widget-label {
+            color: #6B7280;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+        
+        .footer {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+            color: white;
+            padding: 30px 0;
+            margin-top: auto;
+        }
+        
+        .incident-card {
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .incident-card.severity-critical {
+            border-left-color: var(--secondary-color);
+        }
+        
+        .incident-card.severity-high {
+            border-left-color: var(--accent-color);
+        }
+        
+        .incident-card.severity-medium {
+            border-left-color: var(--primary-light);
+        }
+        
+        .incident-card.severity-low {
+            border-left-color: var(--success-color);
+        }
+        
+        .comment-official {
+            background-color: #EFF6FF;
+            border-left: 3px solid var(--primary-color);
+        }
+        
+        .alert {
+            border-radius: 8px;
+            border: none;
+        }
+        
+        .badge-low { background-color: var(--success-color); }
+        .badge-medium { background-color: var(--primary-light); }
+        .badge-high { background-color: var(--accent-color); }
+        .badge-critical { background-color: var(--secondary-color); }
+        
+        .status-active { color: var(--secondary-color); }
+        .status-investigating { color: var(--accent-color); }
+        .status-resolved { color: var(--success-color); }
+        .status-closed { color: #6B7280; }
+        
+        #map, #heatmap, #hero-map, #incident-map {
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            padding: 10px 15px;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+        }
+        
+        .table {
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .table thead th {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            font-weight: 600;
+            border: none;
+        }
+        
+        .progress {
+            border-radius: 10px;
+            height: 12px;
+            background-color: #E5E7EB;
+        }
+        
+        .progress-bar {
+            border-radius: 10px;
+        }
+        
+        .nav-tabs .nav-link {
+            color: var(--text-color) !important;
+            font-weight: 500;
+        }
+        
+        .nav-tabs .nav-link.active {
+            color: var(--primary-color) !important;
+            font-weight: 600;
+            border-bottom-color: var(--primary-color);
+        }
+        
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            border-radius: 10px;
+        }
+        
+        .dropdown-item:hover {
+            background-color: #EFF6FF;
+            color: var(--primary-color);
+        }
+        
+        .breadcrumb {
+            background-color: transparent;
+            padding: 0;
+        }
+        
+        .breadcrumb-item a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .breadcrumb-item.active {
+            color: #6B7280;
+        }
+        
+        .list-group-item {
+            border-color: var(--border-color);
+        }
+        
+        .list-group-item:hover {
+            background-color: #F8FAFC;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--primary-dark);
+        }
+        
+        .text-primary {
+            color: var(--primary-color) !important;
+        }
+        
+        .bg-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%) !important;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'home' %}">
+                <i class="fas fa-shield-alt me-2"></i>Neighbourhood Alert
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'dashboard' %}"><i class="fas fa-tachometer-alt me-1"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'incident_feed' %}"><i class="fas fa-list me-1"></i> Incidents</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'heatmap' %}"><i class="fas fa-map-marked-alt me-1"></i> Heatmap</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'alert_list' %}"><i class="fas fa-bell me-1"></i> Alerts</a>
+                    </li>
+                    {% if user.is_volunteer %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'volunteer_assigned_cases' %}"><i class="fas fa-tasks me-1"></i> Assigned Cases</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'my_campaigns' %}"><i class="fas fa-clipboard-list me-1"></i>Campaigns</a>
+                    </li>
+                    {% elif user.is_police %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'police_my_cases' %}"><i class="fas fa-briefcase me-1"></i> My Cases</a>
+                    </li>
+                    {% elif user.role == 'resident' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'volunteer_list' %}"><i class="fas fa-hands-helping me-1"></i> Volunteers</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'donation_list' %}"><i class="fas fa-hand-holding-heart me-2"></i> Donations</a>
+                    </li>
+                    {% endif %}
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i> {{ user.get_full_name|default:user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="fas fa-user me-2"></i> Profile</a></li>
+                            {% if user.is_admin_user %}
+                            <li><a class="dropdown-item" href="{% url 'user_management' %}"><i class="fas fa-users-cog me-2"></i> User Management</a></li>
+                            <li><a class="dropdown-item" href="{% url 'problem_report_admin_list' %}"><i class="fas fa-bug me-2"></i> Reported Issues</a></li>
+                            <li><a class="dropdown-item" href="{% url 'pending_approvals' %}"><i class="fas fa-check-circle me-2"></i> Pending Approvals</a></li>
+                            <li><a class="dropdown-item" href="{% url 'statistics' %}"><i class="fas fa-chart-bar me-2"></i> Statistics</a></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="post" action="{% url 'logout' %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="fas fa-sign-out-alt me-2"></i> Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}"><i class="fas fa-sign-in-alt me-1"></i> Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'register' %}"><i class="fas fa-user-plus me-1"></i> Register</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    <div class="container mt-3">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Main Content -->
+    <main class="container py-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5><i class="fas fa-shield-alt me-2"></i>Neighbourhood Alert</h5>
+                    <p class="mb-0">Community Crime Management System for Kimberley, Northern Cape</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">
+                        <i class="fas fa-phone me-2"></i>Emergency: 10111<br>
+                        <i class="fas fa-ambulance me-2"></i>Ambulance: 10177
+                    </p>
+                </div>
+            </div>
+            <hr class="my-3" style="border-color: rgba(255,255,255,0.2);">
+            <div class="text-center">
+                <p class="mb-0">&copy; 2026 Neighbourhood Alert. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <div class="modal fade" id="unexpectedErrorModal" tabindex="-1" aria-labelledby="unexpectedErrorTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" id="unexpectedErrorTitle">Something went wrong</h2>
+                    <button type="button" class="btn-close" data-error-dismiss aria-label="Dismiss"></button>
+                </div>
+                <div class="modal-body">
+                    We encountered an unexpected error. Would you like to report this problem to help us improve Neighbourhood Alert?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-error-report-start>Report Problem</button>
+                    <button type="button" class="btn btn-outline-secondary" data-error-dismiss>Dismiss</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script defer src="{% static 'problem_reports/error_prompt.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
