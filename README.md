@@ -1,43 +1,41 @@
 # Neighbourhood Alert - Community Crime Management System
 
-A Django web application prototype for community safety workflows. The project is
-configured around Kimberley, Northern Cape; this configuration does not establish
-local stakeholder need or prove real-world crime outcomes.
+Neighbourhood Alert is a Django-based prototype for community safety and incident management in Kimberley, Northern Cape. The project is intended to explore how residents, volunteers, police officers, and administrators could work together to report incidents, coordinate support, and share alerts.
+
+This is a prototype, not a verified live crime-management system or proof of existing local demand or crime outcomes. The project is configured around Kimberley, but that does not automatically confirm that the system reflects real-world community needs or official operational requirements.
 
 ## Features
 
-### User Roles
+### User roles
 
 1. **Resident**
-   - Register and login securely
-   - Submit incident reports with location and evidence
-   - Hide the reporter's name in ordinary incident display (the account remains
-     linked to the report in the database)
-   - View and track reported incidents
+   - Register and log in securely
+   - Submit incident reports with a location and supporting evidence
+   - Hide the reporter's name in normal incident views while keeping the account linked in the database
+   - Track incident updates and review reported cases
    - Comment on incidents
-   - View an aggregated heatmap
-   - Request to donate equipment to volunteer campaigns
+   - View a community heatmap
+   - Request to support equipment campaigns run by volunteers
 
 2. **Community Volunteer**
-   - Register as a volunteer (requires approval)
-   - Apply for approval before accessing assigned case workflows
-   - View incidents assigned by police
-   - Update assignment status and submit progress/completion reports
-   - Create non-financial equipment campaigns
+   - Register as a volunteer and wait for approval
+   - Apply for access to assigned case workflows
+   - View incidents assigned by police officers
+   - Update assignment status and submit progress reports
+   - Create non-financial equipment support campaigns
 
 3. **Police Officer**
-   - View incident reports and manage police case workflows after approval
+   - View reports and manage approved case workflows
    - Assign approved volunteers to incidents
    - Create emergency alerts
    - View exact incident locations and authorized analytics
 
 4. **Administrator**
-   - Manage user accounts and review volunteer/police applications
-   - Create alerts and view analytics
-   - View incident details, but not update police case status through the
-     ordinary incident workflow
+   - Manage user accounts and review volunteer and police applications
+   - Create alerts and review analytics
+   - View incident details without changing police case status through the normal incident workflow
 
-## Technology Stack
+## Technology stack
 
 - **Backend**: Django 5.0.x (declared in `requirements.txt` as `Django>=5.0,<5.1`)
 - **Frontend**: HTML5, CSS3, JavaScript, Bootstrap 5
@@ -52,19 +50,19 @@ local stakeholder need or prove real-world crime outcomes.
 - Python 3.10–3.12 for the Django version declared by this project
 - pip
 
-### Setup Instructions
+### Setup steps
 
-1. **Navigate to the project directory**
+1. **Open the project directory**
    ```bash
    cd neighbourhood_alert
    ```
 
-2. **Use a Python version supported by the declared Django release, then install dependencies**
+2. **Install the required packages**
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Run migrations**
+3. **Apply database migrations**
    ```bash
    python manage.py migrate
    ```
@@ -74,23 +72,20 @@ local stakeholder need or prove real-world crime outcomes.
    python manage.py createsuperuser
    ```
 
-5. **Run the development server**
+5. **Start the development server**
    ```bash
    python manage.py runserver
    ```
 
-6. **Access the application**
-   - Open browser: http://localhost:8000
+6. **Open the app**
+   - Web app: http://localhost:8000
    - Admin panel: http://localhost:8000/admin
 
 ### Password reset by email
 
-The reset workflow creates a single-use Django reset link for a matching active
-account and uses the configured Django email backend. The settings default to
-`EMAIL_MODE=console`, which writes messages to the server console. For a
-controlled Mailtrap SMTP test, configure the ignored project-root `.env` file
-with a Mailtrap sending token and a sender address accepted by your Mailtrap
-account:
+The password-reset flow generates a single-use Django reset link for an active account and uses the configured Django email backend. By default, the project uses `EMAIL_MODE=console`, which sends messages to the server console instead of an external mail provider.
+
+For a controlled Mailtrap test, add these settings to the ignored project-root `.env` file using a valid Mailtrap sending token and a sender address that your Mailtrap account accepts:
 
 ```dotenv
 EMAIL_MODE=smtp
@@ -102,18 +97,13 @@ EMAIL_HOST_PASSWORD=your-mailtrap-sending-token
 DEFAULT_FROM_EMAIL=noreply@your-verified-domain.example
 ```
 
-The test suite replaces SMTP with Django's in-memory email backend; it does not
-test Mailtrap or prove external delivery. No successful live Mailtrap delivery
-has been verified for this project. Do not commit `.env` or credentials.
-Restart Django after changing environment settings. Reset links use the request
-host, so use the public HTTPS host after deployment. For multi-worker
-deployments, configure a shared cache for reset-request cooldowns.
+The test suite switches the email backend to Django's in-memory backend, which does not test Mailtrap delivery or confirm real email sending. No successful live Mailtrap delivery has been verified for this project. Do not commit `.env` files or credentials.
+
+After changing environment settings, restart Django. Reset links use the request host, so deployment should use the public HTTPS host. For multi-worker deployments, configure a shared cache for reset-request cooldowns.
 
 ### Production security settings
 
-Development settings are not production settings. For deployment, configure
-these values in the hosting environment or its protected secret store; do not
-commit them:
+The development configuration is not intended for production use. Before deployment, configure these values in the hosting environment or an approved secret store. Do not commit them to the repository:
 
 ```dotenv
 DEBUG=false
@@ -121,28 +111,17 @@ SECRET_KEY=<unique-long-random-secret>
 ALLOWED_HOSTS=your-domain.example,www.your-domain.example
 ```
 
-With `DEBUG=false`, Django requires a configured `SECRET_KEY` and `ALLOWED_HOSTS`,
-redirects HTTP to HTTPS, enables secure session and CSRF cookies, and enables
-HSTS. Ensure HTTPS is working at the application or trusted reverse proxy
-before enabling the deployment. Local development uses `DEBUG=true` in the
-ignored `.env`; do not copy that setting to production. Set
-`SECURE_SSL_REDIRECT`, `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`, and
-`SECURE_HSTS_SECONDS` explicitly only when your hosting setup requires different
-values.
+With `DEBUG=false`, Django expects a valid `SECRET_KEY` and `ALLOWED_HOSTS`, redirects HTTP traffic to HTTPS, enables secure session and CSRF cookies, and supports HSTS. Make sure HTTPS is working correctly at the app or behind a trusted reverse proxy before enabling production settings.
+
+Local development uses `DEBUG=true` in the ignored `.env` file. Do not copy that setting to production. Only set `SECURE_SSL_REDIRECT`, `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`, and `SECURE_HSTS_SECONDS` explicitly when your hosting setup requires them.
 
 ### Emergency-alert SMS (BulkSMS)
 
-BulkSMS integration code uses the provider's HTTPS JSON API and API-token
-Basic Auth. The settings defaults are SMS disabled, dry-run enabled, and
-test-number mode disabled. Dry-run records delivery intent without contacting
-BulkSMS. When test-number mode is enabled, only the configured test number can
-be selected. Code and mocked tests do not prove provider submission or handset
-delivery.
+The BulkSMS integration uses the provider's HTTPS JSON API with API-token Basic Auth. The default settings disable SMS, keep dry-run enabled, and leave test-number mode off. In dry-run mode, the code records the intention to send a message without contacting BulkSMS. When test-number mode is enabled, only the configured test number can be selected.
 
-Add these settings to the ignored project-root `.env` file when you are ready
-to configure the integration. Keep the token ID and secret private. Set the
-public URL to the site's HTTPS address so approval messages can include a
-working login/dashboard link:
+The code and its mocked tests do not prove provider submission or delivery to a real handset.
+
+When you are ready to configure the integration, add the following values to the ignored project-root `.env` file. Keep the token ID and secret private. Set the public URL to the site's HTTPS address so approval messages can include a working login or dashboard link:
 
 ```dotenv
 BULKSMS_ENABLED=true
@@ -154,28 +133,13 @@ BULKSMS_TEST_PHONE_NUMBER=your-authorized-test-mobile-number
 BULKSMS_PUBLIC_URL=https://your-public-site.example
 ```
 
-Alert SMS includes the alert's title, priority, message/details, location, and
-expiry. Put only public safety information in the alert message; do not include
-private incident, resident, or investigation details. Recipients are active
-residents and active, approved police officers and volunteers with valid South
-African mobile numbers. Admin accounts are not included in broadcasts.
+Alert SMS messages should contain only public safety information. Do not include private incident details, resident information, or investigation-sensitive material. Recipients are active residents and active, approved police officers and volunteers with valid South African mobile numbers. Administrator accounts are not included in alert broadcasts.
 
-After configuration, keep `BULKSMS_DRY_RUN=true` until an authorized,
-controlled provider test is approved. Live tests must use `BULKSMS_TEST_MODE=true`
-and an authorized test number. Do not send broadcasts as part of documentation
-or routine development. No successful live BulkSMS delivery has been verified
-for this project. Restart Django after changing `.env`.
+After configuration, leave `BULKSMS_DRY_RUN=true` until an authorized, controlled provider test has been approved. Live tests must use `BULKSMS_TEST_MODE=true` and an approved test number. Do not send alerts as part of documentation or routine development. No successful live BulkSMS delivery has been verified for this project. Restart Django after changing `.env`.
 
-Police and volunteer approval workflows send one welcome SMS after the account
-is approved and active. If `BULKSMS_PUBLIC_URL` is configured, the message
-includes the login/dashboard URL; otherwise, it is sent without a link.
-Delivery records for alerts and approval messages are available in Django
-admin. Provider failures do not undo an alert or account approval, and failed
-submissions are not retried automatically to avoid duplicate messages.
+Police and volunteer approval workflows send a welcome SMS once the account has been approved and is active. If `BULKSMS_PUBLIC_URL` is configured, the message includes the login or dashboard URL. Otherwise, it is sent without a link. Delivery records for alerts and approval messages are available in Django admin. Provider failures do not undo an alert or approval, and failed submissions are not retried automatically to avoid duplicate messages.
 
-No sample accounts are provided or verified by the files in this repository.
-Create a local administrator with `createsuperuser`; create test users through
-the registration flow or test fixtures.
+No sample accounts are included or verified in this repository. Create a local administrator with `createsuperuser`, and create test users through the registration flow or test fixtures.
 
 ## Project Structure
 

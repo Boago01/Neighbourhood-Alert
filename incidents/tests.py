@@ -309,6 +309,19 @@ class IncidentDetailPrivacyTests(TestCase):
         self.assertContains(response, 'callback=initReportMap')
         self.assertContains(response, 'test-google-maps-key')
 
+    def test_empty_incident_report_displays_required_field_errors(self):
+        self.client.force_login(self.reporter)
+
+        response = self.client.post(reverse('report_incident'), {})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'novalidate')
+        self.assertContains(response, 'Select a location on the map.')
+        self.assertContains(response, 'This field is required.')
+        self.assertContains(response, 'invalid-feedback d-block fw-semibold')
+        self.assertContains(response, 'Please correct the errors below.')
+        self.assertEqual(Incident.objects.count(), 1)
+
     def test_anonymous_user_must_log_in_before_incident_feed(self):
         response = self.client.get(reverse('incident_feed'))
 
